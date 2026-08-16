@@ -1,1 +1,16 @@
-
+{
+  "name": "Renovační pas — terénní sběr (ZAVEZA)",
+  "short_name": "RP sběr",
+  "version": "1.0.3",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#12603a",
+  "lang": "cs",
+  "icons": [
+    {"src": "ikona-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "ikona-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
