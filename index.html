@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RP sběr">
+<meta name="theme-color" content="#12603a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="ikona-192.png">
+<title>Renovační pas — terénní sběr v1.0.2 (ZAVEZA)</title>
+<style>
+:root{
+  --zel:#12603a; --zel2:#1d8b55; --sed:#f4f5f4; --ram:#d6dad7; --txt:#16211b;
+  --cerv:#b3261e; --zlt:#8a6d00; --modr:#0b5cab;
+  --r:12px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--txt);background:#fff;font-size:17px;line-height:1.45}
+body{padding-bottom:env(safe-area-inset-bottom)}
+header{position:sticky;top:0;z-index:50;background:var(--zel);color:#fff;padding:calc(env(safe-area-inset-top) + 8px) 12px 8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+header h1{font-size:17px;margin:0;font-weight:650;flex:1;min-width:120px}
+header .stav{font-size:13px;opacity:.9}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border-radius:var(--r);border:1px solid transparent;padding:10px 14px;background:#fff;color:var(--zel);font-weight:600;min-height:44px}
+button.p{background:var(--zel2);color:#fff}
+button.g{background:#fff;color:var(--zel);border-color:var(--ram)}
+button.d{background:#fff;color:var(--cerv);border-color:#e8c9c7;padding:6px 10px;min-height:36px;font-size:15px}
+button.sm{padding:8px 12px;min-height:38px;font-size:15px}
+nav.taby{display:flex;gap:6px;overflow-x:auto;padding:8px 12px;background:var(--sed);border-bottom:1px solid var(--ram);position:sticky;top:0;z-index:40;-webkit-overflow-scrolling:touch}
+nav.taby button{white-space:nowrap;background:#fff;border:1px solid var(--ram);color:#4a544d;font-weight:600;padding:8px 12px;min-height:40px;font-size:15px}
+nav.taby button.akt{background:var(--zel);color:#fff;border-color:var(--zel)}
+nav.taby button.hot::after{content:" ✓";color:var(--zel2)}
+nav.taby button.akt.hot::after{color:#bff0d6}
+main{padding:14px 12px 120px;max-width:1000px;margin:0 auto}
+h2.sek{font-size:20px;margin:4px 0 2px}
+p.pod{margin:0 0 14px;color:#5b655e;font-size:15px}
+.pole{margin:0 0 14px}
+.pole>label{display:block;font-weight:600;margin-bottom:5px;font-size:15px}
+.pole .hint{font-weight:400;color:#6b756e;font-size:13px;display:block;margin-top:3px}
+input[type=text],input[type=number],input[type=email],input[type=tel],input[type=date],select,textarea{
+  width:100%;padding:11px 12px;border:1px solid var(--ram);border-radius:var(--r);background:#fff;min-height:46px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--zel2);outline-offset:-1px}
+textarea{min-height:84px}
+.ano-ne{display:flex;gap:8px}
+.ano-ne button{flex:1;border:1px solid var(--ram);background:#fff;color:#4a544d}
+.ano-ne button.akt{background:var(--zel);color:#fff;border-color:var(--zel)}
+.mrizka{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.mrizka3{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+fieldset.blok{border:1px solid var(--ram);border-radius:var(--r);padding:12px;margin:0 0 12px;background:#fff}
+fieldset.blok legend{font-weight:700;padding:0 6px;font-size:15px;color:var(--zel)}
+.blok-hl{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.karta{background:var(--sed);border:1px solid var(--ram);border-radius:var(--r);padding:12px;margin:0 0 12px}
+.vysledek{background:#eef7f1;border:1px solid #bfe0cd;border-radius:var(--r);padding:12px;margin:10px 0;font-size:15px}
+.vysledek b{font-size:18px}
+.varovani{background:#fdf6e3;border:1px solid #e8d9a0;border-radius:var(--r);padding:10px 12px;margin:10px 0;font-size:14px}
+.chyba{background:#fdeceb;border:1px solid #f0c4c1;border-radius:var(--r);padding:10px 12px;margin:10px 0;font-size:14px;color:#8c1d18}
+.radek{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:9px 0;font-size:15px}
+.chk input{width:26px;height:26px;flex:none;margin:0}
+table.vrstvy{width:100%;border-collapse:collapse;font-size:14px}
+table.vrstvy th,table.vrstvy td{border-bottom:1px solid var(--ram);padding:5px 4px;text-align:left}
+table.vrstvy input,table.vrstvy select{min-height:40px;padding:7px 8px}
+.foto-mrizka{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:8px}
+.foto-mrizka figure{margin:0;position:relative}
+.foto-mrizka img{width:100%;height:100px;object-fit:cover;border-radius:8px;border:1px solid var(--ram);display:block}
+.foto-mrizka button{position:absolute;top:4px;right:4px;padding:2px 8px;min-height:0;font-size:13px;background:rgba(255,255,255,.92);color:var(--cerv);border:1px solid #e8c9c7}
+canvas.podpis{width:100%;height:190px;border:1px dashed #9aa79f;border-radius:var(--r);background:#fff;touch-action:none;display:block}
+.lista{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--ram);padding:10px 12px calc(env(safe-area-inset-bottom) + 10px);display:flex;gap:8px;justify-content:space-between;align-items:center;z-index:60}
+.lista .info{font-size:13px;color:#5b655e}
+.odznak{display:inline-block;background:var(--zlt);color:#fff;border-radius:20px;padding:1px 9px;font-size:12px;font-weight:700;margin-left:6px}
+.zakazka{border:1px solid var(--ram);border-radius:var(--r);padding:12px;margin-bottom:10px;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.zakazka .nazev{font-weight:700}
+.zakazka .meta{font-size:13px;color:#5b655e}
+.pill{display:inline-block;font-size:12px;font-weight:700;border-radius:20px;padding:2px 9px}
+.pill.ok{background:#e3f3ea;color:#12603a}
+.pill.ceka{background:#fdf3d8;color:#7a5d00}
+.pill.odesl{background:#e4eefb;color:#0b5cab}
+.skryt{display:none!important}
+@media print{
+  header,nav.taby,.lista,.netisknout{display:none!important}
+  main{padding:0;max-width:none}
+  body{font-size:12px}
+  .karta,fieldset.blok{background:#fff;border:1px solid #999;break-inside:avoid}
+  h2.sek{page-break-before:auto}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="hlavicka">Renovační pas — terénní sběr</h1>
+  <span class="stav" id="stavUlozeni">—</span>
+  <button class="sm g" id="btnSeznam">Zakázky</button>
+</header>
+<nav class="taby" id="taby"></nav>
+<main id="obsah"><div id="bezSkriptu" style="padding:6px 0">
+  <h2 style="font-size:20px;margin:4px 0 8px">Appka se nespustila</h2>
+  <div style="background:#fdeceb;border:1px solid #f0c4c1;border-radius:12px;padding:12px;margin:0 0 12px">
+    <b>Vidíte tuhle zprávu?</b> Znamená to, že prohlížeč nespustil skript — soubor je nejspíš otevřený
+    v <b>náhledu</b> aplikace Soubory, a ten na iPhonu a iPadu skripty nepouští.
+  </div>
+  <p style="margin:0 0 8px"><b>Co s tím:</b></p>
+  <ul style="margin:0 0 12px;padding-left:20px">
+    <li style="margin-bottom:6px">Nejjistější je otevřít appku z <b>webové adresy</b> — napište nám a pošleme odkaz.</li>
+    <li style="margin-bottom:6px">Na <b>Androidu</b> soubor otevřete v Chrome (ne v prohlížeči souborů).</li>
+    <li style="margin-bottom:6px">Na <b>notebooku</b> klikněte na soubor pravým tlačítkem → Otevřít v programu → Chrome nebo Edge.</li>
+  </ul>
+  <p style="color:#5b655e;font-size:14px;margin:0">Terénní sběr dat pro renovační pasy · ZAVEZA · v1.0.2</p>
+</div></main>
+<script>
+/* Běží jako první. Když se sem prohlížeč dostane, skripty fungují a zprávu výše schováme.
+   Pokud zpráva zůstane vidět, JavaScript je vypnutý (typicky náhled souboru na iOS). */
+try { var b = document.getElementById("bezSkriptu"); if (b) b.style.display = "none"; } catch (e) {}
+</script>
+<div class="lista netisknout">
+  <span class="info" id="infoLista">ZAVEZA · v1.0.2</span>
+  <div class="radek">
+    <button class="sm g" id="btnUlozitSoubor">Jen uložit</button>
+    <button class="sm p" id="btnOdeslat">Uložit a odeslat</button>
+  </div>
+</div>
+<script>
+"use strict";
+/* ============================================================
+   Renovační pas — terénní sběr dat (ZAVEZA)
+   Offline-first. Data zůstávají v zařízení (IndexedDB), dokud je
+   uživatel nevyexportuje nebo neodešle. Odeslání lze zařadit do
+   fronty a provést až na signálu.
+   ============================================================ */
+
+/* ---------- 0. Konfigurace ---------- */
+const CFG = {
+  verze: "1.0.2",
+  /* Endpoint na webu Zavezy. Když je prázdný, appka odesílá pouze
+     souborem (Sdílet / Uložit do souborů). Doplní se při nasazení. */
+  endpoint: "",
+  /* Adresa kanceláře, kam chodí hotové návštěvy. Stačí přepsat tady. */
+  email: "frantisek.novak@aztraders.cz",
+  prahDecil3: 25426,   // Kč/měs na spotřební jednotku (3. decil)
+  prahDecil5: 31058    // Kč/měs na SJ (5. decil — důchodci, invalidita III.)
+};
+
+/* Režim běhu — appka musí naběhnout i tam, kde prohlížeč úložiště zakáže. */
+const REZIM = {uloziste: null};          // "idb" | "lokalni" | "pamet"
+const omezeneUloziste = () => REZIM.uloziste !== "idb";
+
+/* ---------- 1. Úložiště: IndexedDB → localStorage → jen paměť ----------
+   iOS u stránky otevřené přímo ze souboru IndexedDB blokuje a požadavek
+   často ani neskončí chybou — prostě visí. Proto všude timeout: když se
+   úložiště neozve, jdeme o úroveň níž, ale appka naběhne vždy. */
+const DB = (() => {
+  const LIMIT_MS = 2000;
+  const casovac = (slib, ms = LIMIT_MS) => new Promise((res, rej) => {
+    let hotovo = false;
+    const t = setTimeout(() => { if (!hotovo) { hotovo = true; rej(new Error("timeout")); } }, ms);
+    slib.then(v => { if (!hotovo) { hotovo = true; clearTimeout(t); res(v); } },
+              e => { if (!hotovo) { hotovo = true; clearTimeout(t); rej(e); } });
+  });
+
+  let db = null;
+  function otevri(){
+    return new Promise((res, rej) => {
+      if (db) return res(db);
+      let r;
+      try { r = indexedDB.open("rp-teren", 1); } catch(e) { return rej(e); }
+      r.onupgradeneeded = e => {
+        const d = e.target.result;
+        if (!d.objectStoreNames.contains("zakazky")) d.createObjectStore("zakazky", {keyPath:"id"});
+      };
+      r.onsuccess = e => { db = e.target.result; res(db); };
+      r.onerror = e => rej(e.target.error || new Error("idb error"));
+      r.onblocked = () => rej(new Error("idb blocked"));
+    });
+  }
+  async function sklad(mode){ const d = await otevri(); return d.transaction("zakazky", mode).objectStore("zakazky"); }
+  const zadost = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+
+  const idb = {
+    async ulozit(z){ return casovac(sklad("readwrite").then(s => zadost(s.put(JSON.parse(JSON.stringify(z)))))); },
+    async nacist(id){ return casovac(sklad("readonly").then(s => zadost(s.get(id)))); },
+    async vse(){ return casovac(sklad("readonly").then(s => zadost(s.getAll())).then(v => v || [])); },
+    async smazat(id){ return casovac(sklad("readwrite").then(s => zadost(s.delete(id)))); }
+  };
+
+  /* 2. stupeň — localStorage (menší kapacita, ale přežije zavření appky) */
+  const KLIC = "rp-teren-zakazky";
+  const lokalni = {
+    cti(){ try { return JSON.parse(localStorage.getItem(KLIC) || "[]"); } catch(_) { return []; } },
+    zapis(a){ localStorage.setItem(KLIC, JSON.stringify(a)); },
+    async ulozit(z){ const a = lokalni.cti(); const i = a.findIndex(x => x.id === z.id); i >= 0 ? a[i] = z : a.push(z); lokalni.zapis(a); },
+    async nacist(id){ return lokalni.cti().find(x => x.id === id); },
+    async vse(){ return lokalni.cti(); },
+    async smazat(id){ lokalni.zapis(lokalni.cti().filter(x => x.id !== id)); }
+  };
+
+  /* 3. stupeň — jen paměť. Data zmizí po zavření, ale appka je použitelná
+     a poradce si zakázku uloží souborem. */
+  let pamet = [];
+  const vPameti = {
+    async ulozit(z){ const i = pamet.findIndex(x => x.id === z.id); i >= 0 ? pamet[i] = z : pamet.push(z); },
+    async nacist(id){ return pamet.find(x => x.id === id); },
+    async vse(){ return pamet.slice(); },
+    async smazat(id){ pamet = pamet.filter(x => x.id !== id); }
+  };
+
+  /* Zjistí nejlepší dostupné úložiště. Volá se jednou při startu. */
+  async function zvolUloziste(){
+    if (typeof indexedDB !== "undefined" && indexedDB) {
+      try { await casovac(otevri()); await idb.vse(); REZIM.uloziste = "idb"; return; }
+      catch(_) { db = null; }
+    }
+    try {
+      const t = "rp-test-" + Date.now();
+      localStorage.setItem(t, "1"); localStorage.removeItem(t);
+      REZIM.uloziste = "lokalni"; return;
+    } catch(_) {}
+    REZIM.uloziste = "pamet";
+  }
+
+  const akt = () => REZIM.uloziste === "idb" ? idb : (REZIM.uloziste === "lokalni" ? lokalni : vPameti);
+  /* Když vybrané úložiště za běhu selže, spadneme o stupeň níž a jedeme dál. */
+  const obal = jmeno => async (...a) => {
+    try { return await akt()[jmeno](...a); }
+    catch(e) {
+      if (REZIM.uloziste === "idb") REZIM.uloziste = "lokalni";
+      else if (REZIM.uloziste === "lokalni") REZIM.uloziste = "pamet";
+      upozorneniUloziste();
+      try { return await akt()[jmeno](...a); } catch(_) { return jmeno === "vse" ? [] : undefined; }
+    }
+  };
+
+  return {
+    pripravit: zvolUloziste,
+    ulozit: obal("ulozit"), nacist: obal("nacist"), vse: obal("vse"), smazat: obal("smazat")
+  };
+})();
+
+function upozorneniUloziste(){
+  const stary = document.getElementById("hlUloziste");
+  if (stary) stary.remove();
+  if (!omezeneUloziste()) return;
+  const b = el("div", {id:"hlUloziste", class:"varovani netisknout", style:"margin:10px 12px 0"});
+  if (REZIM.uloziste === "lokalni") {
+    b.append(el("b", {}, "Zjednodušené ukládání. "),
+      "Prohlížeč nepovolil plné úložiště — appka je nejspíš otevřená přímo ze souboru. Funguje dál, ale zvládne uložit jen několik fotek na zakázku. ",
+      el("b", {}, "Po každé návštěvě zakázku hned ulož a odešli."));
+  } else {
+    b.append(el("b", {}, "Pozor: data se neukládají natrvalo. "),
+      "Tenhle prohlížeč neumožnil žádné úložiště (typicky když se soubor otevře v náhledu, ne v Safari). ",
+      el("b", {}, "Po skončení návštěvy hned klepni na „Uložit a odeslat“, jinak se zápis ztratí zavřením appky. "),
+      "Spolehlivé řešení: otevřít appku v Safari (Sdílet → Otevřít v Safari), nebo ji nechat nahrát na web.");
+  }
+  document.body.insertBefore(b, document.querySelector("main"));
+}
+
+/* ---------- 2. Pomocné ---------- */
+const $ = s => document.querySelector(s);
+const el = (tag, attrs = {}, ...deti) => {
+  const e = document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs)) {
+    if (k === "class") e.className = v;
+    else if (k === "html") e.innerHTML = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else if (v !== null && v !== undefined && v !== false) e.setAttribute(k, v);
+  }
+  deti.flat().forEach(d => { if (d === null || d === undefined || d === false) return; e.append(d.nodeType ? d : document.createTextNode(d)); });
+  return e;
+};
+const nebo = (v, n) => (v === null || v === undefined) ? n : v;
+const cislo = v => { const n = parseFloat(String(nebo(v, "")).replace(",", ".")); return isFinite(n) ? n : 0; };
+const fmt = (n, des = 2) => (isFinite(n) ? n.toLocaleString("cs-CZ", {minimumFractionDigits:des, maximumFractionDigits:des}) : "—");
+const fmtKc = n => (isFinite(n) ? Math.round(n).toLocaleString("cs-CZ") + " Kč" : "—");
+const dnes = () => new Date().toISOString().slice(0,10);
+const uid = () => "z" + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+
+/* ---------- 3. Číselníky ---------- */
+const KRAJE = ["Praha","Středočeský","Jihočeský","Plzeňský","Karlovarský","Ústecký","Liberecký","Královéhradecký","Pardubický","Vysočina","Jihomoravský","Olomoucký","Zlínský","Moravskoslezský"];
+const ORIENTACE = ["S","SV","V","JV","J","JZ","Z","SZ"];
+const ENERGONOSITEL = ["zemní plyn","elektřina","hnědé uhlí","černé uhlí","koks","kusové dřevo","dřevní pelety","dřevní štěpka","LTO / nafta","propan / LPG","CZT (dálkové teplo)","energie prostředí (TČ)","jiné"];
+const TYP_ZDROJE = ["kotel plynový standardní","kotel plynový kondenzační","kotel na uhlí (odhořívací)","kotel na uhlí (prohořívací)","kotel na uhlí automatický","kotel na biomasu ruční","kotel na biomasu automatický","krbová kamna / lokální topidlo","elektrokotel","přímotopy / el. panely","elektrická akumulační kamna","tepelné čerpadlo vzduch-voda","tepelné čerpadlo země-voda","tepelné čerpadlo vzduch-vzduch","předávací stanice CZT","jiný"];
+const OTOPNA_SOUSTAVA = ["teplovodní — desková otopná tělesa","teplovodní — litinová otopná tělesa","teplovodní — podlahové vytápění","teplovodní — stěnové vytápění","elektrická přímotopná tělesa","elektrická podlahová","teplovzdušné rozvody","lokální (bez rozvodů)","kombinace"];
+const CERPADLA = ["bez oběhového čerpadla","staré neregulované čerpadlo","čerpadlo s regulací otáček (úsporné)","nevím"];
+const ZDROJ_TV = ["společný se zdrojem vytápění","samostatný plynový ohřívač","průtokový plynový ohřívač","elektrický zásobníkový bojler","elektrický průtokový ohřívač","tepelné čerpadlo na TV","solární termický systém","CZT","jiný"];
+const PRIPRAVA_TV = ["zásobník v blízkosti odběru, krátké rozvody","zásobník s cirkulací (celodenní)","zásobník s cirkulací (časově řízená)","průtokový ohřev bez zásobníku","decentrální ohřev u výtoků"];
+const OSVETLENI = ["převážně LED","převážně zářivky / úsporné","převážně klasické žárovky","kombinace"];
+const ZASTAVBA = ["volně stojící","řadový — krajní","řadový — vnitřní","dvojdomek","v husté zástavbě"];
+const TYP_VYUZITI = ["rodinný dům","bytový dům","rekreační objekt (trvale obývaný)","jiné"];
+const TYP_STENY = ["vnější stěna těžká (zděná, betonová)","vnější stěna lehká (dřevostavba, sendvič)","stěna k nevytápěnému prostoru","stěna k zemině (suterén)","stěna k sousední budově"];
+const TYP_PODLAHY = ["podlaha na terénu","podlaha nad nevytápěným prostorem (sklep)","podlaha nad venkovním prostorem"];
+const TYP_STRECHY = ["strop pod nevytápěnou půdou","šikmá střecha ≤ 60° (obytné podkroví)","strmá střecha > 60°","plochá střecha"];
+const TYP_VYPLNE = ["okno","balkonové dveře","vstupní dveře","střešní okno","garážová vrata","světlík"];
+const ZASKLENI = ["jednoduché sklo","dvojsklo (starší, dřevo/kov)","zdvojené okno (špaletové)","izolační dvojsklo","izolační trojsklo","plné dveřní křídlo","nevím"];
+const RAM = ["dřevo","plast","hliník","kov bez přerušení","dřevo-hliník","nevím"];
+const VEK_SKUPINA = ["18–29","30–54","55+"];
+const POHLAVI = ["muž","žena","neuvedeno"];
+
+/* Orientační součinitele tepelné vodivosti λ [W/(m·K)] — tabulkové
+   hodnoty dle ČSN 73 0540-3. ⚠️ Pro finální výpočet ověřit dle výrobce. */
+const MATERIALY = [
+  ["— vlastní (zadej λ) —", null],
+  ["Cihla plná pálená", 0.80],
+  ["Cihla děrovaná (CDm, klasická)", 0.42],
+  ["Cihelný blok broušený (Porotherm apod.)", 0.14],
+  ["Kámen (smíšené zdivo)", 2.00],
+  ["Vepřovice (nepálená hlína)", 0.70],
+  ["Škvárobeton / škvárové tvárnice", 0.50],
+  ["Pórobeton / plynosilikát (Ytong)", 0.15],
+  ["Beton hutný / železobeton", 1.43],
+  ["Keramzitbeton", 0.42],
+  ["Dřevo měkké (napříč vláken)", 0.18],
+  ["Omítka vápenocementová", 0.88],
+  ["Omítka sádrová / vápenná", 0.57],
+  ["Sádrokarton", 0.22],
+  ["EPS fasádní (šedý)", 0.032],
+  ["EPS fasádní (bílý)", 0.037],
+  ["EPS perimetr / XPS", 0.034],
+  ["Minerální vata (desky)", 0.039],
+  ["Minerální vata (foukaná do dutin)", 0.042],
+  ["PIR / PUR deska", 0.024],
+  ["Foukaná celulóza", 0.040],
+  ["Dřevovláknitá deska", 0.045],
+  ["Konopná / ovčí izolace", 0.040],
+  ["Perlit / škvára (zásyp)", 0.10],
+  ["Asfaltová hydroizolace", 0.21],
+  ["Dlažba / keramika", 1.01],
+  ["Písek, štěrk (podsyp)", 0.65]
+];
+
+/* Odpory při přestupu tepla Rsi + Rse [m²·K/W] podle typu konstrukce */
+const ODPORY = {
+  "stena":   {Rsi:0.13, Rse:0.04, popis:"vnější stěna (Rsi 0,13 + Rse 0,04)"},
+  "stena_nevyt": {Rsi:0.13, Rse:0.13, popis:"stěna k nevytápěnému prostoru (0,13 + 0,13)"},
+  "stena_zem": {Rsi:0.13, Rse:0.00, popis:"stěna k zemině (0,13 + 0)"},
+  "strecha": {Rsi:0.10, Rse:0.04, popis:"střecha / strop nahoru ven (0,10 + 0,04)"},
+  "strop_puda": {Rsi:0.10, Rse:0.10, popis:"strop pod nevytápěnou půdou (0,10 + 0,10)"},
+  "podlaha_teren": {Rsi:0.17, Rse:0.00, popis:"podlaha na terénu (0,17 + 0)"},
+  "podlaha_sklep": {Rsi:0.17, Rse:0.17, popis:"podlaha nad nevytápěným prostorem (0,17 + 0,17)"}
+};
+
+/* Požadované hodnoty U_N,20 dle ČSN 73 0540-2 — pro barevné hodnocení */
+const UPOZAD = {
+  "stena":0.30, "stena_nevyt":0.60, "stena_zem":0.45,
+  "strecha":0.24, "strop_puda":0.30, "podlaha_teren":0.45, "podlaha_sklep":0.60
+};
+
+/* Navrhovaná opatření — dle Protokolu o návštěvě na místě (výzva 2/2026) */
+const OPATRENI = [
+  ["A",  "Zateplení obálky budovy (stěny, střecha, podlaha, výplně)"],
+  ["C.1","Výměna zdroje tepla na vytápění"],
+  ["C.2","Příprava teplé vody (nový zdroj / úprava)"],
+  ["C.3","Fotovoltaický systém"],
+  ["C.4","Solární termický systém"],
+  ["C.5","Řízené větrání s rekuperací"],
+  ["D.1","Dešťová voda / hospodaření s vodou"],
+  ["D.2","Zelená střecha / adaptační opatření"]
+];
+
+/* ---------- 4. Datový model ---------- */
+function prazdnaZakazka(){
+  return {
+    id: uid(),
+    vytvoreno: new Date().toISOString(),
+    zmeneno: new Date().toISOString(),
+    odeslano: null,
+    ceka: false,
+    data: {
+      a1:{datumNavstevy:dnes()}, a2:{}, a6:{}, a7:{}, a8:{}, b1:{}, b3:{opatreni:[], prohlaseni:{}},
+      steny:[], podlahy:[], strechy:[], vyplne:[], zdroje:[], zdrojeTV:[], clenove:[], fotky:[], spotreby:[]
+    }
+  };
+}
+let Z = null;              // aktuální zakázka
+let aktSekce = "a0";
+let ulozTimer = null;
+
+function zmena(){
+  if (!Z) return;
+  Z.zmeneno = new Date().toISOString();
+  $("#stavUlozeni").textContent = "ukládám…";
+  clearTimeout(ulozTimer);
+  ulozTimer = setTimeout(async () => {
+    try {
+      await DB.ulozit(Z);
+      $("#stavUlozeni").textContent = "uloženo " + new Date().toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"});
+    } catch(e) {
+      $("#stavUlozeni").textContent = "NEULOŽENO!";
+      alert("Zařízení odmítlo uložit data — pravděpodobně je plné úložiště prohlížeče.\n\n"
+        + "Co udělat hned: klikni na „Uložit soubor“, zakázku si zazálohuj a smaž několik fotek.");
+    }
+    vykreslitTaby();
+  }, 400);
+}
+
+/* ---------- 5. Generické vykreslení polí ---------- */
+function pole(obj, def){
+  const id = "f_" + Math.random().toString(36).slice(2,8);
+  const wrap = el("div", {class:"pole"});
+  const lab = el("label", {for:id}, def.l + (def.jed ? " [" + def.jed + "]" : ""));
+  wrap.append(lab);
+  let vst;
+  const nastav = v => { obj[def.k] = v; zmena(); };
+
+  if (def.t === "anone") {
+    vst = el("div", {class:"ano-ne"});
+    [["ano","ANO"],["ne","NE"]].forEach(([v,t]) => {
+      const b = el("button", {type:"button", class: obj[def.k]===v ? "akt":"", onclick:() => {
+        obj[def.k] = (obj[def.k]===v ? "" : v); zmena(); prekreslit();
+      }}, t);
+      vst.append(b);
+    });
+  } else if (def.t === "select") {
+    vst = el("select", {id, onchange:e => { nastav(e.target.value); if (def.prekresli) prekreslit(); }});
+    vst.append(el("option", {value:""}, "— vyber —"));
+    (def.opt||[]).forEach(o => {
+      const val = Array.isArray(o) ? o[0] : o, txt = Array.isArray(o) ? o[1] : o;
+      const op = el("option", {value:val}, txt);
+      if (String(obj[def.k]) === String(val)) op.selected = true;
+      vst.append(op);
+    });
+  } else if (def.t === "textarea") {
+    vst = el("textarea", {id, oninput:e => nastav(e.target.value)});
+    vst.value = nebo(obj[def.k], "");
+  } else if (def.t === "check") {
+    wrap.innerHTML = "";
+    const l2 = el("label", {class:"chk"});
+    const c = el("input", {type:"checkbox", onchange:e => { obj[def.k] = e.target.checked; zmena(); }});
+    c.checked = !!obj[def.k];
+    l2.append(c, el("span", {}, def.l));
+    wrap.append(l2);
+    if (def.hint) wrap.append(el("span", {class:"hint"}, def.hint));
+    return wrap;
+  } else {
+    const typy = {text:"text", number:"number", date:"date", email:"email", tel:"tel"};
+    vst = el("input", {id, type: typy[def.t] || "text", inputmode: def.t==="number" ? "decimal" : null,
+      step: def.t==="number" ? "any" : null, placeholder: def.ph || "", oninput:e => nastav(e.target.value)});
+    vst.value = nebo(obj[def.k], "");
+  }
+  wrap.append(vst);
+  if (def.hint) wrap.append(el("span", {class:"hint"}, def.hint));
+  return wrap;
+}
+
+function polePole(obj, defs, tridaMrizky){
+  const g = el("div", {class: tridaMrizky || "mrizka"});
+  defs.forEach(d => g.append(pole(obj, d)));
+  return g;
+}
+
+/* Opakovatelný seznam bloků */
+function seznam(list, titulek, novyFn, renderFn, popis){
+  const box = el("div");
+  if (popis) box.append(el("p", {class:"pod"}, popis));
+  list.forEach((polozka, i) => {
+    const fs = el("fieldset", {class:"blok"});
+    fs.append(el("legend", {}, titulek + " " + (i+1)));
+    fs.append(renderFn(polozka, i));
+    fs.append(el("div", {class:"radek", style:"justify-content:flex-end;margin-top:6px"},
+      el("button", {type:"button", class:"d", onclick:() => {
+        if (confirm("Opravdu smazat „" + titulek + " " + (i+1) + "“?")) { list.splice(i,1); zmena(); prekreslit(); }
+      }}, "Smazat")));
+    box.append(fs);
+  });
+  box.append(el("button", {type:"button", class:"p", onclick:() => { list.push(novyFn()); zmena(); prekreslit(); }},
+    "+ Přidat " + titulek.toLowerCase()));
+  return box;
+}
+
+/* ---------- 6. Výpočty ---------- */
+/* U z vrstev dle ČSN EN ISO 6946:  U = 1 / (Rsi + Σ(d/λ) + Rse) */
+function spoctiU(k){
+  const o = ODPORY[k.typR] || ODPORY.stena;
+  let R = o.Rsi + o.Rse, chybi = false;
+  (k.vrstvy||[]).forEach(v => {
+    const d = cislo(v.d) / 1000;           // mm → m
+    const lam = cislo(v.lam);
+    if (d > 0 && lam > 0) R += d / lam; else if (d > 0 || lam > 0) chybi = true;
+  });
+  if (!(k.vrstvy||[]).some(v => cislo(v.d) > 0 && cislo(v.lam) > 0)) return {U:null, R:null, chybi:true};
+  return {U: 1/R, R, chybi};
+}
+
+/* Decil / energetická chudoba dle nástroje SFŽP (EU-SILC 2025) */
+function spoctiDecil(b1){
+  const dosp = Math.max(0, cislo(b1.dalsiDospeli));
+  const d13 = Math.max(0, cislo(b1.detiDo13));
+  const d13p = Math.max(0, cislo(b1.detiNad13));
+  const SJ = 1 + 0.5*dosp + 0.3*d13 + 0.5*d13p;
+  const prijem = cislo(b1.prijemMzdy) + cislo(b1.prijemOSVC) + cislo(b1.prijemDavky)
+               + cislo(b1.prijemDuchody) + cislo(b1.prijemVyzivne) + cislo(b1.prijemJine);
+  const naSJ = SJ > 0 ? prijem / SJ : 0;
+  const petiny = b1.duchodciInvalidita === "ano";
+  const prah = petiny ? CFG.prahDecil5 : CFG.prahDecil3;
+  return {SJ, prijem, naSJ, prah, splnuje: prijem > 0 && naSJ <= prah, petiny};
+}
+
+/* Objem a plochy — zjednodušený rozklad dle metodiky (viz kalkulačka objemu) */
+function spoctiObjem(g){
+  const a = cislo(g.pudorysA), b = cislo(g.pudorysB);
+  const hp = cislo(g.vyskaPodlazi), np = Math.max(0, cislo(g.pocetPodlazi));
+  const nadez = cislo(g.nadezdivka), hreben = cislo(g.hreben);
+  const plochaPud = a * b;
+  const objemPodlazi = plochaPud * hp * np;
+  /* sedlová střecha / podkroví: průměrná výška = (nadezdívka + hřeben)/2 */
+  const objemStrecha = (nadez > 0 || hreben > 0) ? plochaPud * ((nadez + hreben)/2) : 0;
+  const vnejsi = objemPodlazi + objemStrecha;
+  return {plochaPud, objemPodlazi, objemStrecha, vnejsi, podlahovaHruba: plochaPud * np};
+}
+
+/* ---------- 7. Definice sekcí ---------- */
+const SEKCE = [
+  {id:"a0", tab:"Návštěva",  nazev:"Návštěva a poradce", pod:"Vyplní se jednou na začátku. Poradce a kód se předvyplní z posledního záznamu."},
+  {id:"a1", tab:"A1 Budova", nazev:"A1 · Budova", pod:"Pořadí polí odpovídá sekci „Budova“ v aplikaci RP — v kanceláři se přepisuje shora dolů."},
+  {id:"a2", tab:"A2 Geometrie", nazev:"A2 · Geometrie budovy", pod:"Změř půdorys a výšky; objem se dopočítá rozkladem na části (SketchUp není potřeba)."},
+  {id:"a3", tab:"A3 Obálka", nazev:"A3 · Obálkové konstrukce", pod:"Aplikace RP chce U přímo. Zadej skladbu po vrstvách — U se spočítá dle ČSN EN ISO 6946."},
+  {id:"a4", tab:"A4 Vytápění", nazev:"A4 · Zdroje tepla na vytápění", pod:"Vyfoť štítek zdroje (záložka Foto) — výkon a rok se pak dohledá v kanceláři."},
+  {id:"a5", tab:"A5 Teplá voda", nazev:"A5 · Zdroje tepla pro ohřev TV", pod:""},
+  {id:"a6", tab:"A6 Větrání", nazev:"A6 · Větrání, chlazení a osvětlení", pod:""},
+  {id:"a7", tab:"A7 Solár", nazev:"A7 · Solární termický ohřev TV", pod:""},
+  {id:"a8", tab:"A8 FVE", nazev:"A8 · Fotovoltaika", pod:""},
+  {id:"sp", tab:"Spotřeby", nazev:"Spotřeby a ceny energií", pod:"Z vyúčtování za poslední rok. Slouží pro kontrolu výpočtu i pro žádost (dodaná energie MWh/rok)."},
+  {id:"b1", tab:"B1 Decil", nazev:"B1 · Energetická chudoba (příjmový decil)", pod:"Jen když se řeší dotace pro nízkopříjmovou domácnost. Prahy: 3. decil 25 426 Kč, 5. decil 31 058 Kč na spotřební jednotku."},
+  {id:"b2", tab:"B2 Foto", nazev:"B2 · Fotodokumentace", pod:"Povinná příloha žádosti. Fotky zůstávají v zařízení, dokud je neodešleš."},
+  {id:"b3", tab:"B3 Protokol", nazev:"B3 · Protokol o návštěvě na místě", pod:"Povinný podepsaný výstup návštěvy. Podepisuje žadatel i poradce — lze bez signálu."},
+  {id:"ex", tab:"Export", nazev:"Kontrola a odeslání", pod:"Zkontroluj úplnost, ulož soubor a odešli, až budeš na signálu."}
+];
+
+/* Kontrola vyplněnosti sekce (pro fajfku v navigaci) */
+function hotovo(id){
+  const d = Z.data;
+  switch(id){
+    case "a0": return !!(d.a1.datumNavstevy && d.a0Poradce);
+    case "a1": return !!(d.a1.obec && d.a1.typVyuziti);
+    case "a2": return cislo(d.a2.evp) > 0;
+    case "a3": return (d.steny.length + d.strechy.length + d.podlahy.length) > 0 && d.vyplne.length > 0;
+    case "a4": return d.zdroje.length > 0;
+    case "a5": return d.zdrojeTV.length > 0;
+    case "a6": return !!d.a6.rizeneVetrani;
+    case "a7": return !!d.a7.instalovan;
+    case "a8": return !!d.a8.instalovana;
+    case "sp": return d.spotreby.length > 0;
+    case "b1": return d.b1.resiSeDotace !== "ano" || cislo(d.b1.prijemMzdy)+cislo(d.b1.prijemDuchody)+cislo(d.b1.prijemDavky)+cislo(d.b1.prijemOSVC) > 0;
+    case "b2": return d.fotky.length >= 4;
+    case "b3": return !!(d.b3.podpisKlient && d.b3.podpisPoradce);
+    default: return false;
+  }
+}
+
+/* ---------- 8. Vykreslení jednotlivých sekcí ---------- */
+const R = {};
+
+R.a0 = () => {
+  const d = Z.data;
+  const box = el("div");
+  box.append(polePole(d, [
+    {k:"a0Poradce", l:"Jméno poradce (měřiče)", t:"text"},
+    {k:"a0Kod", l:"Kód poradce / oprávnění", t:"text", hint:"Kód ze školení, pod kterým je poradce v evidenci SFŽP."},
+    {k:"a0Subjekt", l:"Registrovaný subjekt", t:"text", ph:"Zaveza consulting s.r.o."},
+    {k:"a0Garant", l:"Energetický specialista / AO (garant)", t:"text", ph:"Ing. Miroslav Mikeš"}
+  ]));
+  box.append(polePole(d.a1, [
+    {k:"datumNavstevy", l:"Datum návštěvy", t:"date"},
+    {k:"cas", l:"Čas příjezdu", t:"text", ph:"např. 9:30"}
+  ]));
+  box.append(polePole(d, [
+    {k:"a0Vystup", l:"Výstup návštěvy", t:"select", opt:["renovační pas","renovační pas + dotační poradenství"], prekresli:true}
+  ]));
+  box.append(el("div", {class:"varovani"}, "Renovační pas vydává energetický specialista / autorizovaná osoba. Poradce zajišťuje sběr dat a podklady pod garantem."));
+  return box;
+};
+
+R.a1 = () => {
+  const a = Z.data.a1, box = el("div");
+  box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Základní údaje"), polePole(a, [
+    {k:"nazev", l:"Název / označení objektu", t:"text", ph:"např. RD Novák, Přívory 12"},
+    {k:"typVyuziti", l:"Typ využití", t:"select", opt:TYP_VYUZITI},
+    {k:"obdobiVystavby", l:"Orientační období výstavby (rok)", t:"number", ph:"1935"},
+    {k:"rekonstruovana", l:"Budova byla významněji rekonstruována", t:"anone"},
+    {k:"rekonstrukcePopis", l:"Co a kdy se rekonstruovalo", t:"textarea"},
+    {k:"pamatkovaOchrana", l:"Památková ochrana budovy", t:"anone"}
+  ])));
+  box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Adresa"), polePole(a, [
+    {k:"ulice", l:"Ulice", t:"text"}, {k:"cp", l:"Číslo popisné", t:"text"},
+    {k:"cor", l:"Číslo orientační", t:"text"}, {k:"cev", l:"Číslo evidenční", t:"text"},
+    {k:"obec", l:"Obec", t:"text"}, {k:"castObce", l:"Část obce", t:"text"},
+    {k:"psc", l:"PSČ", t:"text"}, {k:"kraj", l:"Kraj", t:"select", opt:KRAJE},
+    {k:"parcela", l:"Parcelní číslo", t:"text"}, {k:"katastr", l:"Katastrální území", t:"text"}
+  ])));
+  box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Zadavatel a kontakt"), polePole(a, [
+    {k:"zadJmeno", l:"Jméno", t:"text"}, {k:"zadPrijmeni", l:"Příjmení", t:"text"},
+    {k:"zadDatumNar", l:"Datum narození", t:"date", hint:"Potřebné pro Protokol o návštěvě."},
+    {k:"vlastniZdroje", l:"Předpokládané vlastní zdroje na opatření", t:"number", jed:"Kč"},
+    {k:"email", l:"E-mail", t:"email"}, {k:"telefon", l:"Telefon", t:"tel"},
+    {k:"datovka", l:"ID datové schránky", t:"text"}
+  ])));
+  return box;
+};
+
+R.a2 = () => {
+  const g = Z.data.a2, box = el("div");
+  box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Pomocný výpočet objemu a ploch"),
+    el("p", {class:"pod"}, "Zjednodušený rozklad: půdorys × výška podlaží; u sedlové střechy průměrná výška = (nadezdívka + hřeben) / 2. U složitých tvarů (mansarda, valba, vikýře) rozlož dům na části a sečti ručně."),
+    polePole(g, [
+      {k:"pudorysA", l:"Půdorys — délka", t:"number", jed:"m"},
+      {k:"pudorysB", l:"Půdorys — šířka", t:"number", jed:"m"},
+      {k:"pocetPodlazi", l:"Počet vytápěných podlaží", t:"number"},
+      {k:"vyskaPodlazi", l:"Konstrukční výška podlaží", t:"number", jed:"m"},
+      {k:"nadezdivka", l:"Nadezdívka (podkroví)", t:"number", jed:"m", hint:"0, pokud podkroví není vytápěné"},
+      {k:"hreben", l:"Výška do hřebene nad podlahou podkroví", t:"number", jed:"m"}
+    ], "mrizka3"),
+    (() => {
+      const v = spoctiObjem(g);
+      return el("div", {class:"vysledek"},
+        el("div", {}, "Zastavěná plocha: ", el("b", {}, fmt(v.plochaPud,1) + " m²")),
+        el("div", {}, "Objem podlaží: " + fmt(v.objemPodlazi,1) + " m³ · objem podkroví: " + fmt(v.objemStrecha,1) + " m³"),
+        el("div", {}, "Orientační vnější objem: ", el("b", {}, fmt(v.vnejsi,1) + " m³")),
+        el("div", {}, "Hrubá podlahová plocha: " + fmt(v.podlahovaHruba,1) + " m²"),
+        el("button", {type:"button", class:"sm g", style:"margin-top:8px", onclick:() => {
+          g.vnejsiObjem = Math.round(v.vnejsi*10)/10;
+          g.evp = g.evp || Math.round(v.podlahovaHruba*10)/10;
+          zmena(); prekreslit();
+        }}, "Převzít do polí níže")
+      );
+    })()
+  ));
+  box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Hodnoty do aplikace RP"), polePole(g, [
+    {k:"zastavba", l:"Typ okolní zástavby", t:"select", opt:ZASTAVBA},
+    {k:"evp", l:"Energeticky vztažná plocha (EVP)", t:"number", jed:"m²"},
+    {k:"podilVnitrni", l:"Podíl vnitřní podlahové plochy z EVP", t:"number", jed:"%", ph:"80"},
+    {k:"vnitrniPlocha", l:"Vnitřní podlahová plocha", t:"number", jed:"m²"},
+    {k:"vnejsiObjem", l:"Vnější objem budovy", t:"number", jed:"m³"},
+    {k:"vnitrniObjem", l:"Vnitřní objem budovy", t:"number", jed:"m³"}
+  ])));
+  return box;
+};
+
+/* --- A3 Obálka: konstrukce se skladbou a výpočtem U --- */
+function novaKonstrukce(typR){ return {nazev:"", typ:"", typR:typR, plocha:"", lze:"", vrstvy:[{mat:"", d:"", lam:""}], poznamka:""}; }
+
+function tabulkaVrstev(k){
+  const t = el("table", {class:"vrstvy"});
+  t.append(el("thead", {}, el("tr", {},
+    el("th", {style:"width:46%"}, "Materiál vrstvy"),
+    el("th", {style:"width:20%"}, "Tloušťka [mm]"),
+    el("th", {style:"width:22%"}, "λ [W/m·K]"),
+    el("th", {}, ""))));
+  const tb = el("tbody");
+  (k.vrstvy||[]).forEach((v,i) => {
+    const sel = el("select", {onchange:e => {
+      const zvol = MATERIALY.find(m => m[0] === e.target.value);
+      v.mat = e.target.value;
+      if (zvol && zvol[1] !== null) v.lam = zvol[1];
+      zmena(); prekreslit();
+    }});
+    MATERIALY.forEach(m => {
+      const o = el("option", {value:m[0]}, m[0] + (m[1] !== null ? "  (λ " + m[1] + ")" : ""));
+      if (v.mat === m[0]) o.selected = true;
+      sel.append(o);
+    });
+    const dIn = el("input", {type:"number", inputmode:"decimal", step:"any", oninput:e => { v.d = e.target.value; zmena(); prepocitatU(k); }});
+    dIn.value = nebo(v.d, "");
+    const lIn = el("input", {type:"number", inputmode:"decimal", step:"any", oninput:e => { v.lam = e.target.value; zmena(); prepocitatU(k); }});
+    lIn.value = nebo(v.lam, "");
+    tb.append(el("tr", {},
+      el("td", {}, sel), el("td", {}, dIn), el("td", {}, lIn),
+      el("td", {}, el("button", {type:"button", class:"d", onclick:() => { k.vrstvy.splice(i,1); zmena(); prekreslit(); }}, "×"))));
+  });
+  t.append(tb);
+  return t;
+}
+
+function prepocitatU(k){
+  const box = document.querySelector('[data-u="' + k._id + '"]');
+  if (!box) return;
+  const r = spoctiU(k);
+  const pozad = UPOZAD[k.typR];
+  if (r.U === null) { box.innerHTML = "Zadej alespoň jednu vrstvu s tloušťkou a λ."; return; }
+  const stav = r.U <= pozad ? "✅ splňuje požadavek" : "⚠️ nesplňuje požadavek";
+  box.innerHTML = "R = <b>" + fmt(r.R,3) + "</b> m²·K/W &nbsp;→&nbsp; U = <b>" + fmt(r.U,3) + "</b> W/m²·K"
+    + "<br>Požadavek ČSN 73 0540-2: U<sub>N,20</sub> = " + fmt(pozad,2) + " → " + stav;
+}
+
+function renderKonstrukce(seznamKlic, typyOpt, vychoziR){
+  const list = Z.data[seznamKlic];
+  return seznam(list, {steny:"Stěna", podlahy:"Podlaha", strechy:"Střecha"}[seznamKlic],
+    () => novaKonstrukce(vychoziR),
+    (k) => {
+      if (!k._id) k._id = uid();
+      const box = el("div");
+      box.append(polePole(k, [
+        {k:"nazev", l:"Označení", t:"text", ph:"např. Jižní fasáda"},
+        {k:"typ", l:"Typ konstrukce", t:"select", opt:typyOpt},
+        {k:"plocha", l:"Plocha", t:"number", jed:"m²"},
+        {k:"lze", l:"Lze zateplit / vyměnit", t:"anone"}
+      ]));
+      box.append(pole(k, {k:"typR", l:"Odpory při přestupu tepla (dle umístění konstrukce)", t:"select",
+        opt: Object.entries(ODPORY).map(([kk,v]) => [kk, v.popis]), prekresli:true}));
+      box.append(el("div", {class:"karta"},
+        el("div", {class:"blok-hl"}, el("b", {}, "Skladba konstrukce (od interiéru ven)"),
+          el("button", {type:"button", class:"sm g", onclick:() => { k.vrstvy.push({mat:"", d:"", lam:""}); zmena(); prekreslit(); }}, "+ vrstva")),
+        tabulkaVrstev(k),
+        el("div", {class:"vysledek", "data-u":k._id}, "")
+      ));
+      box.append(pole(k, {k:"poznamka", l:"Poznámka (stav, trhliny, vlhkost, plíseň)", t:"textarea"}));
+      setTimeout(() => prepocitatU(k), 0);
+      return box;
+    },
+    null);
+}
+
+R.a3 = () => {
+  const box = el("div");
+  box.append(el("div", {class:"varovani"}, "λ v seznamu jsou orientační tabulkové hodnoty (ČSN 73 0540-3). Pro finální pas je ověř podle skutečného materiálu nebo výrobce."));
+  box.append(el("h3", {}, "Stěny"), renderKonstrukce("steny", TYP_STENY, "stena"));
+  box.append(el("h3", {}, "Podlahy"), renderKonstrukce("podlahy", TYP_PODLAHY, "podlaha_teren"));
+  box.append(el("h3", {}, "Střechy a stropy"), renderKonstrukce("strechy", TYP_STRECHY, "strop_puda"));
+  box.append(el("h3", {}, "Otvorové výplně"));
+  box.append(seznam(Z.data.vyplne, "Výplň", () => ({typ:"", ram:"", zaskleni:"", orientace:"", sirka:"", vyska:"", pocet:1, u:"", lze:"", rok:""}),
+    (v) => {
+      const b = el("div");
+      b.append(polePole(v, [
+        {k:"typ", l:"Typ", t:"select", opt:TYP_VYPLNE},
+        {k:"ram", l:"Rám", t:"select", opt:RAM},
+        {k:"zaskleni", l:"Zasklení", t:"select", opt:ZASKLENI},
+        {k:"orientace", l:"Orientace", t:"select", opt:ORIENTACE},
+        {k:"sirka", l:"Šířka", t:"number", jed:"m"},
+        {k:"vyska", l:"Výška", t:"number", jed:"m"},
+        {k:"pocet", l:"Počet kusů", t:"number"},
+        {k:"rok", l:"Rok výměny (je-li znám)", t:"number"},
+        {k:"u", l:"U (je-li známo z dokumentace)", t:"number", jed:"W/m²·K"},
+        {k:"lze", l:"Lze vyměnit", t:"anone"}
+      ], "mrizka3"));
+      const pl = cislo(v.sirka) * cislo(v.vyska) * Math.max(1, cislo(v.pocet));
+      b.append(el("div", {class:"vysledek"}, "Plocha celkem: ", el("b", {}, fmt(pl,2) + " m²")));
+      return b;
+    }, "U oken je povinná orientace — bez ní aplikace RP nespočítá solární zisky."));
+  box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Stínění"),
+    polePole(Z.data.a3 = Z.data.a3 || {}, [{k:"vnejsiStineni", l:"Je instalováno / navrženo vnější stínění", t:"anone"}])));
+  return box;
+};
+
+R.a4 = () => seznam(Z.data.zdroje, "Zdroj tepla", () => ({typ:"", soustava:"", energonositel:"", podil:"", cerpadla:"", zmena:"", vykon:"", rok:""}),
+  (s) => polePole(s, [
+    {k:"typ", l:"Typ stávajícího zdroje", t:"select", opt:TYP_ZDROJE},
+    {k:"soustava", l:"Typ převažující otopné soustavy", t:"select", opt:OTOPNA_SOUSTAVA},
+    {k:"energonositel", l:"Energonositel", t:"select", opt:ENERGONOSITEL},
+    {k:"podil", l:"Podíl na pokrytí", t:"number", jed:"%"},
+    {k:"vykon", l:"Jmenovitý výkon ze štítku", t:"number", jed:"kW"},
+    {k:"rok", l:"Rok výroby / instalace", t:"number"},
+    {k:"cerpadla", l:"Typ oběhových čerpadel", t:"select", opt:CERPADLA},
+    {k:"zmena", l:"Je navržena změna hlavního zdroje tepla", t:"anone"}
+  ]), "Součet podílů všech zdrojů by měl dát 100 %.");
+
+R.a5 = () => seznam(Z.data.zdrojeTV, "Zdroj TV", () => ({typ:"", energonositel:"", podil:"", priprava:"", objem:"", zmena:""}),
+  (s) => polePole(s, [
+    {k:"typ", l:"Typ stávajícího zdroje", t:"select", opt:ZDROJ_TV},
+    {k:"energonositel", l:"Energonositel", t:"select", opt:ENERGONOSITEL},
+    {k:"podil", l:"Podíl na pokrytí", t:"number", jed:"%"},
+    {k:"priprava", l:"Způsob přípravy a rozvody", t:"select", opt:PRIPRAVA_TV},
+    {k:"objem", l:"Objem zásobníku", t:"number", jed:"l"},
+    {k:"zmena", l:"Je navržena změna zdroje", t:"anone"}
+  ]));
+
+R.a6 = () => {
+  const a = Z.data.a6, box = el("div");
+  box.append(pole(a, {k:"rizeneVetrani", l:"Máte řízené větrání?", t:"anone"}));
+  if (a.rizeneVetrani === "ano") box.append(polePole(a, [
+    {k:"vetraniTyp", l:"Typ jednotky", t:"select", opt:["centrální s rekuperací","decentrální (lokální) s rekuperací","odtahové bez rekuperace","jiné"]},
+    {k:"vetraniUcinnost", l:"Účinnost ZZT (je-li známa)", t:"number", jed:"%"},
+    {k:"vetraniRok", l:"Rok instalace", t:"number"}
+  ]));
+  box.append(pole(a, {k:"chlazeni", l:"Je zde chlazení?", t:"anone"}));
+  if (a.chlazeni === "ano") box.append(polePole(a, [
+    {k:"chlazeniTyp", l:"Typ chlazení", t:"select", opt:["split klimatizace","multisplit","tepelné čerpadlo vzduch-vzduch","jiné"]},
+    {k:"chlazeniPodil", l:"Podíl chlazené plochy", t:"number", jed:"%"}
+  ]));
+  box.append(pole(a, {k:"osvetleni", l:"Typ převažujícího osvětlení", t:"select", opt:OSVETLENI}));
+  return box;
+};
+
+R.a7 = () => {
+  const a = Z.data.a7, box = el("div");
+  box.append(pole(a, {k:"instalovan", l:"Je instalován solární termický systém?", t:"anone"}));
+  if (a.instalovan === "ano") box.append(polePole(a, [
+    {k:"typKolektoru", l:"Typ kolektoru", t:"select", opt:["plochý","trubicový (vakuový)"]},
+    {k:"pocet", l:"Počet kolektorů", t:"number"},
+    {k:"plocha", l:"Celková plocha kolektorů", t:"number", jed:"m²"},
+    {k:"sklon", l:"Sklon", t:"number", jed:"°"},
+    {k:"azimut", l:"Azimut (0° = jih)", t:"number", jed:"°"},
+    {k:"rok", l:"Rok instalace", t:"number"}
+  ]));
+  box.append(pole(a, {k:"navrzen", l:"Je solární termický systém navržen (do budoucna)?", t:"anone"}));
+  return box;
+};
+
+R.a8 = () => {
+  const a = Z.data.a8, box = el("div");
+  box.append(pole(a, {k:"instalovana", l:"Máte nainstalovanou fotovoltaiku?", t:"anone"}));
+  if (a.instalovana === "ano") box.append(polePole(a, [
+    {k:"kwp", l:"Špičkový výkon", t:"number", jed:"kWp"},
+    {k:"panely", l:"Počet panelů", t:"number"},
+    {k:"sklon", l:"Sklon", t:"number", jed:"°"},
+    {k:"azimut", l:"Azimut (0° = jih)", t:"number", jed:"°"},
+    {k:"baterie", l:"Kapacita akumulace", t:"number", jed:"kWh"},
+    {k:"nabijecka", l:"Nabíjecí stanice pro elektromobil", t:"anone"},
+    {k:"rok", l:"Rok instalace", t:"number"}
+  ]));
+  box.append(pole(a, {k:"navrzena", l:"Je fotovoltaika navržena (do budoucna)?", t:"anone"}));
+  return box;
+};
+
+R.sp = () => {
+  const box = el("div");
+  box.append(seznam(Z.data.spotreby, "Energonositel", () => ({energonositel:"", mnozstvi:"", jednotka:"kWh", cena:"", obdobi:"", sazba:""}),
+    (s) => polePole(s, [
+      {k:"energonositel", l:"Energonositel", t:"select", opt:ENERGONOSITEL},
+      {k:"mnozstvi", l:"Spotřeba za rok", t:"number"},
+      {k:"jednotka", l:"Jednotka", t:"select", opt:["kWh","m³","GJ","t","prm (prostorový metr)","q (100 kg)","l"]},
+      {k:"cena", l:"Celkem zaplaceno za rok", t:"number", jed:"Kč"},
+      {k:"sazba", l:"Distribuční sazba (elektřina)", t:"select", opt:["D01d","D02d","D25d","D26d","D27d","D57d","nevím"]},
+      {k:"obdobi", l:"Období vyúčtování", t:"text", ph:"např. 6/2025 – 5/2026"}
+    ], "mrizka3")));
+  box.append(el("div", {class:"varovani"}, "Vyfoť vyúčtování (záložka Foto) — kancelář z něj ověří jednotky i sazbu. Převody: 1 GJ = 277,7 kWh · 1 m³ zemního plynu ≈ 10,55 kWh."));
+  return box;
+};
+
+R.b1 = () => {
+  const b = Z.data.b1, box = el("div");
+  box.append(pole(b, {k:"resiSeDotace", l:"Řeší se dotace pro nízkopříjmovou domácnost?", t:"anone"}));
+  if (b.resiSeDotace !== "ano") {
+    box.append(el("div", {class:"karta"}, "Pokud se dotace pro nízkopříjmové neřeší, sekci lze přeskočit."));
+    return box;
+  }
+  box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Složení domácnosti"),
+    polePole(b, [
+      {k:"dalsiDospeli", l:"Další dospělí (kromě prvního)", t:"number", hint:"koeficient 0,5"},
+      {k:"detiDo13", l:"Děti do 13 let", t:"number", hint:"koeficient 0,3"},
+      {k:"detiNad13", l:"Děti 13 let a starší", t:"number", hint:"koeficient 0,5"}
+    ], "mrizka3"),
+    pole(b, {k:"duchodciInvalidita", l:"Domácnost tvoří pouze důchodci, nebo osoba s invaliditou III. stupně", t:"anone",
+      hint:"Pak se posuzuje mírnější práh 5. decilu."})));
+  box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Čisté měsíční příjmy domácnosti"),
+    polePole(b, [
+      {k:"prijemMzdy", l:"Mzdy a platy", t:"number", jed:"Kč"},
+      {k:"prijemOSVC", l:"Příjmy OSVČ", t:"number", jed:"Kč"},
+      {k:"prijemDuchody", l:"Důchody", t:"number", jed:"Kč"},
+      {k:"prijemDavky", l:"Dávky (rodičovská, přídavky, podpora…)", t:"number", jed:"Kč"},
+      {k:"prijemVyzivne", l:"Výživné", t:"number", jed:"Kč"},
+      {k:"prijemJine", l:"Jiné příjmy", t:"number", jed:"Kč"}
+    ], "mrizka3")));
+  const v = spoctiDecil(b);
+  box.append(el("div", {class: v.splnuje ? "vysledek" : "chyba"},
+    el("div", {}, "Spotřebních jednotek (SJ): ", el("b", {}, fmt(v.SJ,1))),
+    el("div", {}, "Čistý měsíční příjem celkem: " + fmtKc(v.prijem)),
+    el("div", {}, "Příjem na 1 SJ: ", el("b", {}, fmtKc(v.naSJ))),
+    el("div", {}, "Posuzovaný práh: " + fmtKc(v.prah) + (v.petiny ? " (5. decil)" : " (3. decil)")),
+    el("div", {style:"margin-top:6px"}, el("b", {}, v.splnuje ? "✅ Splňuje příjmové kritérium energetické chudoby"
+      : (v.prijem > 0 ? "❌ Nesplňuje příjmové kritérium" : "Zadej příjmy pro vyhodnocení")))));
+  box.append(el("div", {class:"varovani"}, "Nárok vzniká současným splněním: příjem na SJ pod prahem + obálka budovy ve třídě E–G + fyzická osoba + nejvýše 2 nemovitosti. Třídu obálky doplní kancelář z renovačního pasu."));
+  box.append(el("h3", {}, "Členové domácnosti"));
+  box.append(seznam(Z.data.clenove, "Člen domácnosti", () => ({jmeno:"", prijmeni:"", narozeni:""}),
+    (c) => polePole(c, [
+      {k:"jmeno", l:"Jméno", t:"text"}, {k:"prijmeni", l:"Příjmení", t:"text"}, {k:"narozeni", l:"Datum narození", t:"date"}
+    ], "mrizka3"),
+    "Povinný parametr žádosti v AIS — uveď všechny osoby, které v nemovitosti bydlí."));
+  return box;
+};
+
+/* --- B2 Foto --- */
+const FOTO_KAT = ["Fasáda — sever","Fasáda — jih","Fasáda — východ","Fasáda — západ","Střecha","Okna a dveře","Sokl / suterén",
+  "Zdroj vytápění","Štítek zdroje","Zdroj teplé vody","Rozvaděč / jistič","Vyúčtování energií","Závada / porucha","Termovize","Jiné"];
+
+/* Komprese fotek podle toho, k čemu fotka slouží.
+   U dokumentů a štítků musí zůstat čitelný text (kancelář z nich odečítá
+   typ a výkon zdroje, spotřeby z vyúčtování) → vyšší rozlišení.
+   U běžné dokumentace stavu stačí výrazně méně. */
+/* Nastaveno tak, aby běžná zakázka (cca 17 fotek) vyšla v příloze do 5 MB.
+   Kdyby byly fotky málo čitelné, stačí zvýšit max/q — po pilotu doladíme. */
+const KOMPRESE = {
+  dokument: {max:2000, q:0.82},   // štítky, vyúčtování, rozvaděč — musí být čitelný text
+  detail:   {max:1600, q:0.74},   // závady, termovize, okna
+  bezny:    {max:1400, q:0.66}    // fasády, střecha, sokl, celkové pohledy
+};
+function rezimKomprese(kat){
+  if (["Štítek zdroje","Vyúčtování energií","Rozvaděč / jistič"].includes(kat)) return KOMPRESE.dokument;
+  if (["Závada / porucha","Termovize","Okna a dveře"].includes(kat)) return KOMPRESE.detail;
+  return KOMPRESE.bezny;
+}
+
+/* Vykreslí obrázek do plátna na zadanou velikost a vrátí JPEG jako data URL. */
+function prekresliNaJpeg(img, max, q){
+  let {width:w, height:h} = img;
+  if (w > max || h > max) { const k = max / Math.max(w,h); w = Math.round(w*k); h = Math.round(h*k); }
+  const c = el("canvas"); c.width = w; c.height = h;
+  const ctx = c.getContext("2d");
+  if (ctx.imageSmoothingQuality !== undefined) ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(img, 0, 0, w, h);
+  return c.toDataURL("image/jpeg", q);
+}
+
+function zmensitFoto(file, kat){
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const r = rezimKomprese(kat);
+        /* V záložním úložišti (localStorage) je málo místa → ještě o stupeň níž. */
+        const uspornyRezim = omezeneUloziste();
+        res(prekresliNaJpeg(img, uspornyRezim ? Math.round(r.max * 0.75) : r.max, uspornyRezim ? r.q - 0.08 : r.q));
+      };
+      img.onerror = rej; img.src = fr.result;
+    };
+    fr.onerror = rej; fr.readAsDataURL(file);
+  });
+}
+
+/* Nouzové doztlačení už uložených fotek, když je zásilka moc velká. */
+function zmensitJednu(dataUrl, max, q){
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = () => res(prekresliNaJpeg(img, max, q));
+    img.onerror = () => res(dataUrl);
+    img.src = dataUrl;
+  });
+}
+async function doztlacitFotky(){
+  const f = Z.data.fotky;
+  if (!f.length) return alert("Žádné fotky k zmenšení.");
+  if (!confirm("Zmenšit všech " + f.length + " fotek na menší rozlišení?\n\nPůvodní kvalita se tím nevrátí — dělej to, jen když je příloha moc velká.")) return;
+  const pred = velikostFotek();
+  for (const x of f) {
+    const r = rezimKomprese(x.kat);
+    x.data = await zmensitJednu(x.data, Math.round(r.max * 0.7), Math.max(0.45, r.q - 0.15));
+  }
+  await DB.ulozit(Z);
+  alert("Hotovo. Fotky zmenšeny z " + fmt(pred,1) + " MB na " + fmt(velikostFotek(),1) + " MB.");
+  prekreslit();
+}
+function velikostFotek(){
+  return (Z.data.fotky || []).reduce((s,x) => s + (x.data ? x.data.length : 0), 0) * 0.75 / 1048576;
+}
+
+R.b2 = () => {
+  const box = el("div"), f = Z.data.fotky;
+  const katSel = el("select", {id:"fotoKat"});
+  FOTO_KAT.forEach(k => katSel.append(el("option", {value:k}, k)));
+  const vst = el("input", {type:"file", accept:"image/*", multiple:true, style:"display:none",
+    onchange: async e => {
+      const kat = $("#fotoKat").value;
+      for (const file of e.target.files) {
+        try { f.push({id:uid(), kat, popis:"", data: await zmensitFoto(file, kat), cas:new Date().toISOString()}); }
+        catch(_) { alert("Fotku se nepodařilo načíst."); }
+      }
+      e.target.value = ""; zmena(); prekreslit();
+    }});
+  const r = rezimKomprese(katSel.value || FOTO_KAT[0]);
+  box.append(el("div", {class:"karta"},
+    el("div", {class:"pole"}, el("label", {}, "Kategorie fotky"), katSel),
+    el("div", {class:"radek"},
+      el("button", {type:"button", class:"p", onclick:() => vst.click()}, "📷 Vyfotit / vybrat"),
+      el("span", {class:"hint"}, "Fotka se rovnou zmenší podle kategorie — u štítků a vyúčtování zůstává jemnější, ať je text čitelný.")),
+    vst));
+  const podleKat = {};
+  f.forEach(x => { (podleKat[x.kat] = podleKat[x.kat] || []).push(x); });
+  Object.entries(podleKat).forEach(([kat, list]) => {
+    const g = el("div", {class:"foto-mrizka"});
+    list.forEach(x => {
+      g.append(el("figure", {},
+        el("img", {src:x.data, alt:kat}),
+        el("button", {type:"button", onclick:() => {
+          if (confirm("Smazat fotku?")) { const i = f.indexOf(x); f.splice(i,1); zmena(); prekreslit(); }
+        }}, "×")));
+    });
+    box.append(el("fieldset", {class:"blok"}, el("legend", {}, kat + " (" + list.length + ")"), g));
+  });
+  const mb = velikostFotek();
+  box.append(el("div", {class: f.length >= 4 ? "vysledek" : "varovani"},
+    el("div", {}, "Nahráno " + f.length + " fotek · dohromady " + fmt(mb,1) + " MB"
+      + (f.length ? " (průměr " + Math.round(mb*1024/f.length) + " kB na fotku)" : "")),
+    el("div", {}, "Doporučené minimum: všechny fasády, střecha, zdroj + štítek, vyúčtování.")));
+  if (mb > 12) box.append(el("div", {class:"chyba"},
+    el("div", {}, "Fotky zabírají hodně místa — cílíme na přílohu do 5 MB, limit mailu je 25 MB."),
+    el("button", {type:"button", class:"sm p", style:"margin-top:8px", onclick:doztlacitFotky}, "Zmenšit všechny fotky")));
+  return box;
+};
+
+/* --- B3 Protokol o návštěvě + podpisy --- */
+function platnoPodpisu(klic, popisek){
+  const wrap = el("div", {class:"pole"});
+  wrap.append(el("label", {}, popisek));
+  const c = el("canvas", {class:"podpis"});
+  const hotovy = Z.data.b3[klic];
+  wrap.append(c);
+  wrap.append(el("div", {class:"radek netisknout", style:"margin-top:6px"},
+    el("button", {type:"button", class:"sm g", onclick:() => { const ctx = c.getContext("2d"); ctx.clearRect(0,0,c.width,c.height); Z.data.b3[klic] = null; zmena(); }}, "Vymazat podpis"),
+    el("span", {class:"hint"}, "Podepisuje se prstem nebo Apple Pencil. Funguje i bez signálu.")));
+  setTimeout(() => {
+    const dpr = window.devicePixelRatio || 1;
+    c.width = c.clientWidth * dpr; c.height = c.clientHeight * dpr;
+    const ctx = c.getContext("2d");
+    ctx.scale(dpr, dpr); ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.strokeStyle = "#16211b";
+    if (hotovy) { const im = new Image(); im.onload = () => ctx.drawImage(im, 0, 0, c.clientWidth, c.clientHeight); im.src = hotovy; }
+    let kresli = false;
+    const bod = e => { const r = c.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+    c.addEventListener("pointerdown", e => { kresli = true; c.setPointerCapture(e.pointerId); const [x,y] = bod(e); ctx.beginPath(); ctx.moveTo(x,y); });
+    c.addEventListener("pointermove", e => { if (!kresli) return; const [x,y] = bod(e); ctx.lineTo(x,y); ctx.stroke(); });
+    const konec = () => { if (!kresli) return; kresli = false; Z.data.b3[klic] = c.toDataURL("image/png"); zmena(); };
+    c.addEventListener("pointerup", konec); c.addEventListener("pointerleave", konec); c.addEventListener("pointercancel", konec);
+  }, 0);
+  return wrap;
+}
+
+R.b3 = () => {
+  const b = Z.data.b3, a = Z.data.a1, box = el("div");
+  box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Žadatel"),
+    polePole(b, [
+      {k:"pohlavi", l:"Pohlaví vlastníka", t:"select", opt:POHLAVI},
+      {k:"vek", l:"Věková skupina", t:"select", opt:VEK_SKUPINA}
+    ], "mrizka"),
+    el("div", {class:"hint"}, "Povinné indikátory výzvy — sbírají se o vlastníkovi nemovitosti.")));
+
+  const fsOp = el("fieldset", {class:"blok"});
+  fsOp.append(el("legend", {}, "Navrhovaná opatření"));
+  OPATRENI.forEach(([kod, txt]) => {
+    const l = el("label", {class:"chk"});
+    const c = el("input", {type:"checkbox", onchange:e => {
+      const s = new Set(b.opatreni || []);
+      e.target.checked ? s.add(kod) : s.delete(kod);
+      b.opatreni = [...s]; zmena();
+    }});
+    c.checked = (b.opatreni || []).includes(kod);
+    l.append(c, el("span", {}, el("b", {}, kod + " — "), txt));
+    fsOp.append(l);
+  });
+  box.append(fsOp);
+
+  const PROHL = [
+    ["osobne", "Návštěva proběhla osobně na místě u žadatele."],
+    ["doklady", "Žadatel předložil doklady o příjmech domácnosti (u energetické chudoby)."],
+    ["nemovitosti", "Žadatel vlastní nejvýše 2 nemovitosti určené k bydlení."],
+    ["podnikani", "Plocha využívaná k podnikání nepřesahuje 20 % podlahové plochy."],
+    ["pouceni", "Žadatel byl poučen o možnosti změny dodavatele energií a o nastavení záloh."],
+    ["light", "Žadatel byl dotázán na dřívější čerpání podpory NZÚ Light."],
+    ["nezavislost", "Poradce nenabízel konkrétní dodavatele ani výrobky (etický kodex)."]
+  ];
+  const fsP = el("fieldset", {class:"blok"});
+  fsP.append(el("legend", {}, "Prohlášení"));
+  PROHL.forEach(([k, txt]) => {
+    const l = el("label", {class:"chk"});
+    const c = el("input", {type:"checkbox", onchange:e => { b.prohlaseni[k] = e.target.checked; zmena(); }});
+    c.checked = !!b.prohlaseni[k];
+    l.append(c, el("span", {}, txt));
+    fsP.append(l);
+  });
+  box.append(fsP);
+
+  box.append(pole(b, {k:"poznamka", l:"Poznámky z návštěvy", t:"textarea"}));
+
+  box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Podpisy"),
+    el("div", {class:"karta"},
+      el("div", {}, el("b", {}, "Žadatel: "), (a.zadJmeno||"") + " " + (a.zadPrijmeni||"")),
+      el("div", {}, el("b", {}, "Adresa: "), [a.ulice, a.cp, a.obec].filter(Boolean).join(" ")),
+      el("div", {}, el("b", {}, "Datum návštěvy: "), a.datumNavstevy || "—"),
+      el("div", {}, el("b", {}, "Poradce: "), (Z.data.a0Poradce||"—") + (Z.data.a0Kod ? " · kód " + Z.data.a0Kod : ""))),
+    platnoPodpisu("podpisKlient", "Podpis žadatele"),
+    platnoPodpisu("podpisPoradce", "Podpis poradce")));
+
+  box.append(el("div", {class:"radek netisknout"},
+    el("button", {type:"button", class:"p", onclick:() => window.print()}, "🖨 Tisk / uložit jako PDF"),
+    el("span", {class:"hint"}, "Na iPadu: Tisk → rozevřít náhled → Sdílet → Uložit do souborů.")));
+  return box;
+};
+
+/* --- Export / odeslání --- */
+function jmenoSouboru(ext){
+  const a = Z.data.a1;
+  const zaklad = [a.obec, a.zadPrijmeni, (a.datumNavstevy || dnes())].filter(Boolean).join("_")
+    .replace(/[^\w\-á-žÁ-Ž]+/g, "-").replace(/-+/g, "-");
+  return "RP_" + (zaklad || Z.id) + "." + ext;
+}
+
+function balicek(){
+  return {format:"zaveza-rp-teren", verze:CFG.verze, id:Z.id, vytvoreno:Z.vytvoreno, zmeneno:Z.zmeneno, data:Z.data};
+}
+
+async function ulozitSoubor(){
+  const txt = JSON.stringify(balicek(), null, 1);
+  const blob = new Blob([txt], {type:"application/json"});
+  const soubor = jmenoSouboru("json");
+  if (navigator.canShare && navigator.canShare({files:[new File([blob], soubor, {type:"application/json"})]})) {
+    try { await navigator.share({files:[new File([blob], soubor, {type:"application/json"})], title:soubor}); return; }
+    catch(_) { /* uživatel zrušil — spadneme na stažení */ }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = el("a", {href:url, download:soubor});
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+}
+
+function csvZakazky(){
+  const d = Z.data, r = [];
+  const pridej = (sekce, klic, hodnota) => r.push([sekce, klic, String(nebo(hodnota, "")).replace(/"/g,'""')]);
+  const plocho = (o, sekce, pref = "") => {
+    for (const [k,v] of Object.entries(o || {})) {
+      if (v === null || v === undefined || k === "data" || k.startsWith("_")) continue;
+      if (Array.isArray(v)) v.forEach((x,i) => (typeof x === "object" ? plocho(x, sekce, pref + k + "[" + (i+1) + "].") : pridej(sekce, pref + k, x)));
+      else if (typeof v === "object") plocho(v, sekce, pref + k + ".");
+      else pridej(sekce, pref + k, v);
+    }
+  };
+  plocho(d.a1, "A1 Budova"); plocho(d.a2, "A2 Geometrie");
+  d.steny.forEach((k,i) => { const u = spoctiU(k); plocho({...k, vrstvy:undefined, U_vypocet: u.U ? fmt(u.U,3) : ""}, "A3 Stěna " + (i+1)); });
+  d.podlahy.forEach((k,i) => { const u = spoctiU(k); plocho({...k, vrstvy:undefined, U_vypocet: u.U ? fmt(u.U,3) : ""}, "A3 Podlaha " + (i+1)); });
+  d.strechy.forEach((k,i) => { const u = spoctiU(k); plocho({...k, vrstvy:undefined, U_vypocet: u.U ? fmt(u.U,3) : ""}, "A3 Střecha " + (i+1)); });
+  d.vyplne.forEach((v,i) => plocho(v, "A3 Výplň " + (i+1)));
+  d.zdroje.forEach((v,i) => plocho(v, "A4 Zdroj " + (i+1)));
+  d.zdrojeTV.forEach((v,i) => plocho(v, "A5 Zdroj TV " + (i+1)));
+  plocho(d.a6, "A6 Větrání"); plocho(d.a7, "A7 Solár"); plocho(d.a8, "A8 FVE");
+  d.spotreby.forEach((v,i) => plocho(v, "Spotřeba " + (i+1)));
+  const dec = spoctiDecil(d.b1);
+  plocho(d.b1, "B1 Decil");
+  pridej("B1 Decil", "SJ", fmt(dec.SJ,1)); pridej("B1 Decil", "prijem_na_SJ", Math.round(dec.naSJ));
+  pridej("B1 Decil", "splnuje_energ_chudobu", dec.splnuje ? "ANO" : "NE");
+  d.clenove.forEach((v,i) => plocho(v, "Člen domácnosti " + (i+1)));
+  plocho({...d.b3, podpisKlient:undefined, podpisPoradce:undefined, opatreni:(d.b3.opatreni||[]).join(" ")}, "B3 Protokol");
+  return "﻿" + "Sekce;Pole;Hodnota\n" + r.map(x => x.map(y => '"' + y + '"').join(";")).join("\n");
+}
+
+async function ulozitCSV(){
+  const blob = new Blob([csvZakazky()], {type:"text/csv;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = el("a", {href:url, download:jmenoSouboru("csv")});
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+}
+
+/* --- Odeslání e-mailem --- */
+/* Textové shrnutí do těla mailu, aby kancelář viděla to hlavní i bez otevírání přílohy. */
+function souhrnText(){
+  const d = Z.data, a = d.a1, r = [];
+  const pridej = (t, h) => { if (h !== undefined && h !== null && String(h).trim() !== "") r.push(t + ": " + h); };
+  r.push("RENOVAČNÍ PAS — ZÁZNAM Z NÁVŠTĚVY");
+  r.push("");
+  pridej("Objekt", [a.ulice, a.cp, a.obec].filter(Boolean).join(" "));
+  pridej("Klient", [a.zadJmeno, a.zadPrijmeni].filter(Boolean).join(" "));
+  pridej("Telefon", a.telefon); pridej("E-mail klienta", a.email);
+  pridej("Datum návštěvy", a.datumNavstevy);
+  pridej("Poradce", d.a0Poradce);
+  r.push("");
+  pridej("Typ budovy", a.typVyuziti);
+  pridej("Období výstavby", a.obdobiVystavby);
+  pridej("Památková ochrana", a.pamatkovaOchrana);
+  pridej("Energeticky vztažná plocha [m²]", d.a2.evp);
+  pridej("Vnější objem [m³]", d.a2.vnejsiObjem);
+  r.push("");
+  r.push("OBÁLKA");
+  [["Stěna", d.steny], ["Podlaha", d.podlahy], ["Střecha", d.strechy]].forEach(([n, list]) => {
+    list.forEach((k, i) => {
+      const u = spoctiU(k);
+      r.push("  " + n + " " + (i+1) + ": " + (k.nazev || k.typ || "—")
+        + " · plocha " + (k.plocha || "?") + " m²"
+        + (u.U ? " · U = " + fmt(u.U,3) + " W/m²·K" : " · U nespočteno"));
+    });
+  });
+  r.push("  Výplní: " + d.vyplne.length + " (celkem " + fmt(d.vyplne.reduce((s,v) => s + cislo(v.sirka)*cislo(v.vyska)*Math.max(1,cislo(v.pocet)), 0), 1) + " m²)");
+  r.push("");
+  r.push("TECHNIKA");
+  d.zdroje.forEach((s,i) => r.push("  Zdroj " + (i+1) + ": " + (s.typ||"—") + " · " + (s.energonositel||"—") + " · " + (s.podil||"?") + " %"));
+  d.zdrojeTV.forEach((s,i) => r.push("  TV " + (i+1) + ": " + (s.typ||"—") + " · " + (s.energonositel||"—")));
+  if (d.a8.instalovana === "ano") r.push("  FVE: " + (d.a8.kwp || "?") + " kWp");
+  if (d.spotreby.length) { r.push(""); r.push("SPOTŘEBY");
+    d.spotreby.forEach(s => r.push("  " + (s.energonositel||"—") + ": " + (s.mnozstvi||"?") + " " + (s.jednotka||"") + " · " + (s.cena||"?") + " Kč/rok")); }
+  if (d.b1.resiSeDotace === "ano") {
+    const v = spoctiDecil(d.b1);
+    r.push(""); r.push("ENERGETICKÁ CHUDOBA");
+    r.push("  SJ " + fmt(v.SJ,1) + " · příjem na SJ " + Math.round(v.naSJ) + " Kč · práh " + v.prah + " Kč → "
+      + (v.splnuje ? "SPLŇUJE příjmové kritérium" : "nesplňuje"));
+    r.push("  Členů domácnosti: " + d.clenove.length);
+  }
+  r.push("");
+  r.push("PROTOKOL");
+  r.push("  Navrhovaná opatření: " + ((d.b3.opatreni||[]).join(", ") || "—"));
+  r.push("  Podpis žadatele: " + (d.b3.podpisKlient ? "ANO" : "CHYBÍ") + " · podpis poradce: " + (d.b3.podpisPoradce ? "ANO" : "CHYBÍ"));
+  r.push("  Fotek: " + d.fotky.length);
+  if (d.b3.poznamka) { r.push(""); r.push("POZNÁMKY: " + d.b3.poznamka); }
+  r.push("");
+  r.push("(Kompletní data včetně fotek a podpisů jsou v přiloženém souboru .json — otevře se v appce nebo v kanceláři.)");
+  return r.join("\n");
+}
+
+function balicekBezFotek(){
+  const b = balicek();
+  return {...b, data:{...b.data, fotky: (b.data.fotky||[]).map(f => ({id:f.id, kat:f.kat, popis:f.popis, cas:f.cas, data:"[fotka neodeslána]"}))}};
+}
+
+function pripravZasilku(sFotkami){
+  const obsah = JSON.stringify(sFotkami ? balicek() : balicekBezFotek(), null, 1);
+  const soubor = jmenoSouboru("json");
+  const a = Z.data.a1;
+  const predmet = "Renovační pas — " + ([a.obec, a.zadPrijmeni].filter(Boolean).join(", ") || "návštěva") + " — " + (a.datumNavstevy || dnes());
+  const blob = new Blob([obsah], {type:"application/json"});
+  return {blob, soubor, predmet, telo: souhrnText(), file: new File([blob], soubor, {type:"application/json"})};
+}
+
+function stahnoutBlob(blob, soubor){
+  const url = URL.createObjectURL(blob);
+  const odkaz = el("a", {href:url, download:soubor});
+  document.body.append(odkaz); odkaz.click(); odkaz.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+/* Hlavní tlačítko: uloží kopii do zařízení a rovnou otevře odeslání mailem. */
+async function ulozitAOdeslat(sFotkami){
+  if (!Z) return alert("Nejdřív otevři zakázku.");
+  await DB.ulozit(Z);                                  // 1) jistota v appce
+  const z = pripravZasilku(sFotkami);
+  stahnoutBlob(z.blob, z.soubor);                      // 2) kopie souboru do zařízení
+
+  /* 3) Odeslání — na tabletu přes nabídku sdílení, tam je příloha rovnou v mailu. */
+  if (navigator.canShare && navigator.canShare({files:[z.file]})) {
+    try { await navigator.share({files:[z.file], title:z.predmet, text:z.telo}); oznacOdeslano(); return; }
+    catch(e) { if (e && e.name === "AbortError") { prekreslit(); return; } }
+  }
+  const mailto = "mailto:" + encodeURIComponent(CFG.email) + "?subject=" + encodeURIComponent(z.predmet)
+    + "&body=" + encodeURIComponent(z.telo);
+  alert("Uloženo. Soubor " + z.soubor + " máš mezi staženými soubory.\n\n"
+    + "Teď se otevře rozepsaný e-mail — přílohu k němu prosím přidej ručně (skřipec / Přiložit soubor).");
+  if (window.__testMailto) window.__testMailto(mailto); else window.location.href = mailto;
+  oznacOdeslano();
+}
+
+function oznacOdeslano(){
+  Z.odeslano = new Date().toISOString(); Z.ceka = false;
+  DB.ulozit(Z); prekreslit();
+}
+
+async function odeslat(){
+  if (!CFG.endpoint) {
+    Z.ceka = true; await DB.ulozit(Z);
+    alert("Odesílací adresa zatím není nastavená (CFG.endpoint v souboru index.html).\n\nZáznam je označen „čeká na odeslání“. Použij zatím „Uložit soubor“ a pošli ho do kanceláře.");
+    prekreslit(); return;
+  }
+  if (!navigator.onLine) {
+    Z.ceka = true; await DB.ulozit(Z);
+    alert("Teď není signál. Záznam je uložený a označený „čeká na odeslání“.\nAž budeš na signálu, otevři appku a klikni znovu na Odeslat — pošlou se i všechny čekající zakázky.");
+    prekreslit(); return;
+  }
+  await odeslatFrontu(true);
+}
+
+async function odeslatFrontu(hlasite){
+  const vse = await DB.vse();
+  const fronta = vse.filter(z => z.ceka || (Z && z.id === Z.id));
+  let ok = 0, chyb = 0;
+  for (const z of fronta) {
+    try {
+      const r = await fetch(CFG.endpoint, {method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({format:"zaveza-rp-teren", verze:CFG.verze, id:z.id, data:z.data})});
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      z.ceka = false; z.odeslano = new Date().toISOString(); await DB.ulozit(z); ok++;
+    } catch(e) { z.ceka = true; await DB.ulozit(z); chyb++; }
+  }
+  if (hlasite) alert(ok + " zakázek odesláno" + (chyb ? ", " + chyb + " se nepodařilo (zůstávají ve frontě)." : "."));
+  if (Z) Z = await DB.nacist(Z.id);
+  prekreslit();
+}
+
+R.ex = () => {
+  const box = el("div"), d = Z.data;
+  const chybi = [];
+  if (!d.a1.obec) chybi.push("adresa objektu (A1)");
+  if (cislo(d.a2.evp) <= 0) chybi.push("energeticky vztažná plocha (A2)");
+  if (!d.steny.length) chybi.push("alespoň jedna stěna (A3)");
+  if (!d.vyplne.length) chybi.push("otvorové výplně (A3)");
+  if (!d.zdroje.length) chybi.push("zdroj vytápění (A4)");
+  if (!d.zdrojeTV.length) chybi.push("zdroj teplé vody (A5)");
+  if (d.fotky.length < 4) chybi.push("fotodokumentace — alespoň 4 fotky (B2)");
+  if (!d.b3.podpisKlient) chybi.push("podpis žadatele (B3)");
+  if (!d.b3.podpisPoradce) chybi.push("podpis poradce (B3)");
+  if (d.b1.resiSeDotace === "ano" && !d.clenove.length) chybi.push("členové domácnosti (B1)");
+
+  box.append(el("div", {class: chybi.length ? "chyba" : "vysledek"},
+    chibiHlavicka(chibiText(chibi_len(chybi))), ...chybi.map(x => el("div", {}, "• " + x))));
+
+  const dec = spoctiDecil(d.b1);
+  box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Souhrn"),
+    el("div", {}, "Konstrukcí: " + (d.steny.length + d.podlahy.length + d.strechy.length) + " · výplní: " + d.vyplne.length
+      + " · zdrojů: " + d.zdroje.length + " · fotek: " + d.fotky.length),
+    d.b1.resiSeDotace === "ano" ? el("div", {}, "Decil: příjem na SJ " + fmtKc(dec.naSJ) + " → " + (dec.splnuje ? "splňuje" : "nesplňuje")) : null,
+    el("div", {}, "Stav: " + (Z.odeslano ? "odesláno " + new Date(Z.odeslano).toLocaleString("cs-CZ") : (Z.ceka ? "čeká na odeslání" : "neodesláno")))));
+
+  /* Odhad velikosti přílohy — kvůli limitu e-mailu (Gmail i Outlook cca 25 MB). */
+  const velikost = JSON.stringify(balicek()).length / 1048576;
+  const velky = velikost > 20;
+
+  box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Uložit a odeslat"),
+    el("p", {class:"pod"}, "Jedno tlačítko: uloží kopii zakázky do zařízení a hned otevře e-mail na "
+      + CFG.email + ". Na tabletu vyber v nabídce sdílení Mail — příloha už v něm je."),
+    el("div", {class:"radek"},
+      el("button", {class:"p", onclick:() => ulozitAOdeslat(true)}, "💾📧 Uložit a odeslat"),
+      el("button", {class:"g", onclick:() => ulozitAOdeslat(false)}, "✉️ Uložit a odeslat bez fotek")),
+    el("div", {class: velky ? "chyba" : "hint", style:"margin-top:8px"},
+      el("div", {}, "Velikost přílohy s fotkami: " + fmt(velikost,1) + " MB ("
+        + d.fotky.length + " fotek, " + fmt(velikostFotek(),1) + " MB)."
+        + (velky ? " To je na e-mail moc — limit bývá 25 MB." : " Vejde se do e-mailu.")),
+      velky ? el("button", {type:"button", class:"sm p", style:"margin-top:8px", onclick:doztlacitFotky}, "Zmenšit fotky a zkusit znovu") : null)));
+
+  box.append(el("div", {class:"radek"},
+    el("button", {class:"g", onclick:ulozitSoubor}, "💾 Jen uložit soubor"),
+    el("button", {class:"g", onclick:ulozitCSV}, "📄 Uložit CSV pro kancelář"),
+    el("button", {class:"g", onclick:() => { aktSekce = "b3"; prekreslit(); setTimeout(() => window.print(), 300); }}, "🖨 Protokol o návštěvě"),
+    CFG.endpoint ? el("button", {class:"g", onclick:odeslat}, "📤 Odeslat na server") : null));
+  box.append(el("div", {class:"varovani"}, "JSON obsahuje i fotky a podpisy — je to kompletní záloha návštěvy. CSV je jen pro rychlý přepis do aplikace RP."));
+  return box;
+};
+/* pomocné pro hlášku o úplnosti */
+function chibi_len(a){ return a.length; }
+function chibiText(n){ return n === 0 ? "✅ Vše podstatné je vyplněné — zakázku lze odeslat." : "Ještě chybí (" + n + "):"; }
+function chibiHlavicka(t){ return el("div", {style:"font-weight:700;margin-bottom:4px"}, t); }
+
+/* ---------- 9. Navigace a vykreslení ---------- */
+function vykreslitTaby(){
+  const t = $("#taby");
+  t.innerHTML = "";
+  if (!Z) return;
+  SEKCE.forEach(s => {
+    const b = el("button", {type:"button", class:(s.id === aktSekce ? "akt " : "") + (hotovo(s.id) ? "hot" : ""),
+      onclick:() => { aktSekce = s.id; prekreslit(); window.scrollTo(0,0); }}, s.tab);
+    t.append(b);
+  });
+}
+
+function prekreslit(){
+  const o = $("#obsah");
+  o.innerHTML = "";
+  if (!Z) { return seznamZakazek(); }
+  const s = SEKCE.find(x => x.id === aktSekce) || SEKCE[0];
+  const a = Z.data.a1;
+  $("#hlavicka").textContent = [a.obec, a.zadPrijmeni].filter(Boolean).join(" · ") || "Nová zakázka";
+  o.append(el("h2", {class:"sek"}, s.nazev));
+  if (s.pod) o.append(el("p", {class:"pod"}, s.pod));
+  o.append((R[s.id] || (() => el("div", {}, "—")))());
+  const i = SEKCE.indexOf(s);
+  o.append(el("div", {class:"radek netisknout", style:"margin-top:20px;justify-content:space-between"},
+    i > 0 ? el("button", {class:"g", onclick:() => { aktSekce = SEKCE[i-1].id; prekreslit(); window.scrollTo(0,0); }}, "← " + SEKCE[i-1].tab) : el("span"),
+    i < SEKCE.length-1 ? el("button", {class:"p", onclick:() => { aktSekce = SEKCE[i+1].id; prekreslit(); window.scrollTo(0,0); }}, SEKCE[i+1].tab + " →") : el("span")));
+  vykreslitTaby();
+}
+
+async function seznamZakazek(){
+  const o = $("#obsah");
+  o.innerHTML = "";
+  $("#taby").innerHTML = "";
+  $("#hlavicka").textContent = "Renovační pas — terénní sběr";
+  const vse = (await DB.vse()).sort((a,b) => (b.zmeneno||"").localeCompare(a.zmeneno||""));
+  o.append(el("h2", {class:"sek"}, "Zakázky v zařízení"));
+  o.append(el("p", {class:"pod"}, "Data jsou uložená jen v tomto iPadu. Odeslat je můžeš kdykoli později — appka nepotřebuje signál."));
+  o.append(el("button", {class:"p", onclick: async () => { Z = prazdnaZakazka(); await DB.ulozit(Z); aktSekce = "a0"; prekreslit(); }}, "+ Nová zakázka"));
+  const cekajici = vse.filter(z => z.ceka).length;
+  if (cekajici) o.append(el("div", {class:"varovani"},
+    cekajici + " zakázek čeká na odeslání. ",
+    el("button", {class:"sm p", style:"margin-left:8px", onclick:() => odeslatFrontu(true)}, "Odeslat vše teď")));
+  vse.forEach(z => {
+    const a = z.data.a1 || {};
+    const stav = z.odeslano ? el("span", {class:"pill odesl"}, "odesláno") : (z.ceka ? el("span", {class:"pill ceka"}, "čeká") : el("span", {class:"pill ok"}, "rozpracováno"));
+    o.append(el("div", {class:"zakazka"},
+      el("div", {},
+        el("div", {class:"nazev"}, [a.obec, a.ulice, a.cp].filter(Boolean).join(" ") || "Nová zakázka"),
+        el("div", {class:"meta"}, [(a.zadJmeno||"") + " " + (a.zadPrijmeni||""), a.datumNavstevy, (z.data.fotky||[]).length + " fotek"].filter(x => String(x).trim()).join(" · ")),
+        el("div", {style:"margin-top:4px"}, stav)),
+      el("div", {class:"radek"},
+        el("button", {class:"sm p", onclick: async () => { Z = await DB.nacist(z.id); aktSekce = "a0"; prekreslit(); }}, "Otevřít"),
+        el("button", {class:"d", onclick: async () => {
+          if (confirm("Smazat zakázku i s fotkami? Nelze vrátit zpět.")) { await DB.smazat(z.id); seznamZakazek(); }
+        }}, "Smazat"))));
+  });
+  if (!vse.length) o.append(el("div", {class:"karta"}, "Zatím tu nic není. Založ první zakázku tlačítkem výše."));
+}
+
+/* ---------- 10. Start ---------- */
+$("#btnSeznam").addEventListener("click", () => { Z = null; seznamZakazek(); });
+$("#btnUlozitSoubor").addEventListener("click", () => { if (Z) ulozitSoubor(); else alert("Nejdřív otevři zakázku."); });
+$("#btnOdeslat").addEventListener("click", () => ulozitAOdeslat(true));
+window.addEventListener("online", () => { if (CFG.endpoint) odeslatFrontu(false); });
+window.addEventListener("beforeunload", () => { if (Z) DB.ulozit(Z); });
+
+/* Když by se cokoli při startu zvrtlo, appka to napíše na obrazovku —
+   nikdy nesmí zůstat prázdná bílá plocha. */
+function chybaStartu(e){
+  const o = $("#obsah");
+  if (!o) return;
+  o.innerHTML = "";
+  o.append(
+    el("h2", {class:"sek"}, "Appku se nepodařilo spustit"),
+    el("div", {class:"chyba"},
+      el("div", {}, "Prohlížeč hlásí: " + (e && e.message ? e.message : String(e))),
+      el("div", {style:"margin-top:8px"}, "Zkus tohle: otevřít soubor v Safari (Sdílet → Otevřít v Safari) místo v náhledu, "
+        + "nebo appku spustit z webové adresy. Kdyby to nepomohlo, pošli prosím tenhle text zpátky do kanceláře.")),
+    el("div", {class:"karta"}, "Diagnostika: " + navigator.userAgent + " · protokol " + location.protocol
+      + " · úložiště " + (REZIM.uloziste || "nezjištěno"))
+  );
+}
+
+(async () => {
+  try {
+    $("#infoLista").textContent = "ZAVEZA · terénní sběr v" + CFG.verze + (navigator.onLine ? "" : " · offline");
+    await DB.pripravit();                 // vybere úložiště; nikdy nezůstane viset
+    await seznamZakazek();
+    upozorneniUloziste();
+  } catch(e) {
+    try { REZIM.uloziste = REZIM.uloziste || "pamet"; await seznamZakazek(); upozorneniUloziste(); }
+    catch(e2) { chybaStartu(e2 || e); }
+  }
+  if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+    try { await navigator.serviceWorker.register("sw.js"); } catch(_) {}
+  }
+})();
+window.addEventListener("error", e => { if (!$("#obsah").children.length) chybaStartu(e.error || e.message); });
+</script>
+</body>
+</html>
