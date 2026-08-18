@@ -1,7 +1,7 @@
 {
   "name": "Renovační pas — terénní sběr (ZAVEZA)",
   "short_name": "RP sběr",
-  "version": "1.0.3",
+  "version": "1.2.0",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
