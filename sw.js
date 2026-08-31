@@ -1,14 +1,18 @@
 /* Service worker — appka funguje bez signálu.
    Při změně index.html zvyš číslo verze, aby se zařízením stáhla nová. */
-const CACHE = "rp-teren-v1.5.1";
+const CACHE = "rp-teren-v1.5.2";
 const SOUBORY = ["./", "./index.html", "./manifest.webmanifest", "./ikona-192.png", "./ikona-512.png"];
 
 /* Každý soubor ukládáme zvlášť — kdyby některý chyběl (např. ikona),
-   nesmí to shodit celou instalaci a připravit nás o offline režim. */
+   nesmí to shodit celou instalaci a připravit nás o offline režim.
+
+   cache:"reload" je zásadní: bez něj jde c.add() přes HTTP cache prohlížeče
+   a nová verze si uloží STARÝ index.html. Ověřeno při vydání v1.5.1 — appka
+   hlásila 1.5.0, přestože na serveru i v názvu cache už bylo 1.5.1. */
 self.addEventListener("install", e => {
   e.waitUntil((async () => {
     const c = await caches.open(CACHE);
-    await Promise.all(SOUBORY.map(u => c.add(u).catch(() => {})));
+    await Promise.all(SOUBORY.map(u => c.add(new Request(u, {cache: "reload"})).catch(() => {})));
     await self.skipWaiting();
   })());
 });
