@@ -1,6 +1,6 @@
 /* Service worker — appka funguje bez signálu.
    Při změně index.html zvyš číslo verze, aby se zařízením stáhla nová. */
-const CACHE = "rp-teren-v1.4.0";
+const CACHE = "rp-teren-v1.4.1";
 const SOUBORY = ["./", "./index.html", "./manifest.webmanifest", "./ikona-192.png", "./ikona-512.png"];
 
 /* Každý soubor ukládáme zvlášť — kdyby některý chyběl (např. ikona),
