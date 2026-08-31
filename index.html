@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#12603a">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="ikona-192.png">
-<title>Renovační pas — terénní sběr v1.4.0 (ZAVEZA)</title>
+<title>Renovační pas — terénní sběr v1.4.1 (ZAVEZA)</title>
 <style>
 :root{
   --zel:#12603a; --zel2:#1d8b55; --sed:#f4f5f4; --ram:#d6dad7; --txt:#16211b;
@@ -120,7 +120,7 @@ canvas.podpis{width:100%;height:190px;border:1px dashed #9aa79f;border-radius:va
     <li style="margin-bottom:6px">Na <b>Androidu</b> soubor otevřete v Chrome (ne v prohlížeči souborů).</li>
     <li style="margin-bottom:6px">Na <b>notebooku</b> klikněte na soubor pravým tlačítkem → Otevřít v programu → Chrome nebo Edge.</li>
   </ul>
-  <p style="color:#5b655e;font-size:14px;margin:0">Terénní sběr dat pro renovační pasy · ZAVEZA · v1.4.0</p>
+  <p style="color:#5b655e;font-size:14px;margin:0">Terénní sběr dat pro renovační pasy · ZAVEZA · v1.4.1</p>
 </div></main>
 <script>
 /* Běží jako první. Když se sem prohlížeč dostane, skripty fungují a zprávu výše schováme.
@@ -128,7 +128,7 @@ canvas.podpis{width:100%;height:190px;border:1px dashed #9aa79f;border-radius:va
 try { var b = document.getElementById("bezSkriptu"); if (b) b.style.display = "none"; } catch (e) {}
 </script>
 <div class="lista netisknout">
-  <span class="info" id="infoLista">ZAVEZA · v1.4.0</span>
+  <span class="info" id="infoLista">ZAVEZA · v1.4.1</span>
   <div class="radek">
     <button class="sm p" id="btnOdeslat">Dokončit a odeslat →</button>
   </div>
@@ -144,7 +144,7 @@ try { var b = document.getElementById("bezSkriptu"); if (b) b.style.display = "n
 
 /* ---------- 0. Konfigurace ---------- */
 const CFG = {
-  verze: "1.4.0",
+  verze: "1.4.1",
   /* Endpoint na webu Zavezy. Když je prázdný, appka odesílá pouze
      souborem (Sdílet / Uložit do souborů). Doplní se při nasazení. */
   endpoint: "",
@@ -485,7 +485,8 @@ function pole(obj, def){
   const lab = el("label", {for:id}, def.l + (def.jed ? " [" + def.jed + "]" : ""));
   wrap.append(lab);
   let vst;
-  const nastav = v => { obj[def.k] = v; zmena(); };
+  /* poPsani = živý přepočet bez překreslení sekce (jinak by uživateli utekl kurzor) */
+  const nastav = v => { obj[def.k] = v; zmena(); if (def.poPsani) def.poPsani(); };
 
   if (def.t === "anone") {
     vst = el("div", {class:"ano-ne"});
@@ -820,13 +821,16 @@ R.a2 = () => {
   tC.append(el("thead", {}, el("tr", {}, el("th", {}, "Část"), el("th", {}, "Délka [m]"), el("th", {}, "Šířka [m]"), el("th", {}, "Plocha"), el("th", {}, ""))));
   const tbC = el("tbody");
   g.casti.forEach((c, i) => {
+    /* Přepočítáváme za běhu, ale sekci nepřekreslujeme — jinak by při psaní utekl kurzor. */
+    const bunkaPlocha = el("td", {}, fmt(cislo(c.a)*cislo(c.b), 1) + " m²");
     const inp = (k) => { const e = el("input", {type:"number", inputmode:"decimal", step:"any",
-      oninput:ev => { c[k] = ev.target.value; zmena(); prekreslit(); }}); e.value = nebo(c[k], ""); return e; };
+      oninput:ev => { c[k] = ev.target.value; zmena();
+        bunkaPlocha.textContent = fmt(cislo(c.a)*cislo(c.b), 1) + " m²"; prepocitat(); }});
+      e.value = nebo(c[k], ""); return e; };
     tbC.append(el("tr", {},
       el("td", {}, el("input", {type:"text", value:nebo(c.nazev,""), placeholder:"např. hlavní hmota",
         oninput:ev => { c.nazev = ev.target.value; zmena(); }})),
-      el("td", {}, inp("a")), el("td", {}, inp("b")),
-      el("td", {}, fmt(cislo(c.a)*cislo(c.b), 1) + " m²"),
+      el("td", {}, inp("a")), el("td", {}, inp("b")), bunkaPlocha,
       el("td", {}, el("button", {type:"button", class:"d", onclick:() => { g.casti.splice(i,1); zmena(); prekreslit(); }}, "×"))));
   });
   tC.append(tbC);
@@ -843,11 +847,11 @@ R.a2 = () => {
   tF.append(el("thead", {}, el("tr", {}, el("th", {}, "Orientace"), el("th", {}, "Délka úseku [m]"), el("th", {}, "Popis"), el("th", {}, ""))));
   const tbF = el("tbody");
   g.fasady.forEach((f, i) => {
-    const sel = el("select", {onchange:ev => { f.orientace = ev.target.value; zmena(); prekreslit(); }});
+    const sel = el("select", {onchange:ev => { f.orientace = ev.target.value; zmena(); prepocitat(); }});
     sel.append(el("option", {value:""}, "— vyber —"));
     ORIENTACE.forEach(o => { const op = el("option", {value:o}, o); if (f.orientace === o) op.selected = true; sel.append(op); });
     const d = el("input", {type:"number", inputmode:"decimal", step:"any",
-      oninput:ev => { f.delka = ev.target.value; zmena(); prekreslit(); }}); d.value = nebo(f.delka, "");
+      oninput:ev => { f.delka = ev.target.value; zmena(); prepocitat(); }}); d.value = nebo(f.delka, "");
     tbF.append(el("tr", {},
       el("td", {}, sel), el("td", {}, d),
       el("td", {}, el("input", {type:"text", value:nebo(f.popis,""), placeholder:"např. čelní stěna",
@@ -860,36 +864,41 @@ R.a2 = () => {
     onclick:() => { g.fasady.push({orientace:"", delka:"", popis:""}); zmena(); prekreslit(); }}, "+ Přidat úsek fasády"));
   box.append(fsF);
 
+  /* 4) Výsledek — vykresluje se do stejného boxu, aby šel přepočítat za běhu */
+  const vys = el("div", {class:"vysledek", id:"geoVysledek"});
+  const prepocitat = () => {
+    const v = spoctiObjem(g);
+    vys.innerHTML = "";
+    vys.append(el("div", {}, "Zastavěná plocha: ", el("b", {}, fmt(v.plochaPud,1) + " m²"),
+      " · obvod: ", el("b", {}, fmt(v.obvod,1) + " m")));
+    vys.append(el("div", {}, "Výška obálky: " + fmt(v.vyska.celkem,2) + " m (z toho nadzemní část " + fmt(v.vyska.nadzemni,2) + " m)"));
+    vys.append(el("div", {}, "Orientační vnější objem: ", el("b", {}, fmt(v.vnejsi,1) + " m³")));
+    vys.append(el("div", {}, "Hrubá podlahová plocha: " + fmt(v.podlahovaHruba,1) + " m² · plocha stěn (bez odečtu otvorů): ", el("b", {}, fmt(v.plochaSten,1) + " m²")));
+    const dleO = Object.keys(v.stenyDleOrientace).filter(o => v.stenyDleOrientace[o] > 0)
+      .map(o => o + " " + fmt(v.stenyDleOrientace[o],1)).join(" · ");
+    if (dleO) vys.append(el("div", {class:"mala"}, "Stěny po orientacích [m²]: " + dleO));
+    if (v.plochaPud > 0 && v.obvod === 0) vys.append(el("div", {class:"mala"}, "Doplň ještě úseky fasády — bez nich se nespočítá plocha stěn ani kontrola oken."));
+    vys.append(el("button", {type:"button", class:"sm g", style:"margin-top:8px", onclick:() => {
+      g.vnejsiObjem = Math.round(v.vnejsi*10)/10;
+      g.evp = g.evp || Math.round(v.podlahovaHruba*10)/10;
+      zmena(); prekreslit();
+    }}, "Převzít do polí níže"));
+  };
+
   /* 3) Výšky — přesně ta skladba, kterou poradce měří na místě */
   box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Výšky"),
     el("p", {class:"pod"}, "Vnější objem se počítá od spodku podlahové konstrukce po horní líc izolace nad stropem. Změř skladbu, ne jen světlou výšku."),
     polePole(g, [
-      {k:"tlPodlaha", l:"Podlahová konstrukce vč. izolace", t:"number", jed:"m", hint:"např. 0,4 + 0,1 EPS = 0,5"},
-      {k:"pocetPodlazi", l:"Počet vytápěných podlaží", t:"number"},
-      {k:"vyskaPodlazi", l:"Světlá výška podlaží", t:"number", jed:"m"},
-      {k:"tlStrop", l:"Tloušťka stropní konstrukce", t:"number", jed:"m"},
-      {k:"tlIzolace", l:"Izolace nad stropem (půda)", t:"number", jed:"m", hint:"0, pokud je podkroví vytápěné"},
-      {k:"nadezdivka", l:"Nadezdívka (vytápěné podkroví)", t:"number", jed:"m", hint:"0, pokud podkroví není vytápěné"},
-      {k:"hreben", l:"Výška do hřebene nad podlahou podkroví", t:"number", jed:"m"}
+      {k:"tlPodlaha", l:"Podlahová konstrukce vč. izolace", t:"number", jed:"m", hint:"např. 0,4 + 0,1 EPS = 0,5", poPsani:() => prepocitat()},
+      {k:"pocetPodlazi", l:"Počet vytápěných podlaží", t:"number", poPsani:() => prepocitat()},
+      {k:"vyskaPodlazi", l:"Světlá výška podlaží", t:"number", jed:"m", poPsani:() => prepocitat()},
+      {k:"tlStrop", l:"Tloušťka stropní konstrukce", t:"number", jed:"m", poPsani:() => prepocitat()},
+      {k:"tlIzolace", l:"Izolace nad stropem (půda)", t:"number", jed:"m", hint:"0, pokud je podkroví vytápěné", poPsani:() => prepocitat()},
+      {k:"nadezdivka", l:"Nadezdívka (vytápěné podkroví)", t:"number", jed:"m", hint:"0, pokud podkroví není vytápěné", poPsani:() => prepocitat()},
+      {k:"hreben", l:"Výška do hřebene nad podlahou podkroví", t:"number", jed:"m", poPsani:() => prepocitat()}
     ], "mrizka3")));
 
-  /* 4) Výsledek */
-  const v = spoctiObjem(g);
-  const vys = el("div", {class:"vysledek"});
-  vys.append(el("div", {}, "Zastavěná plocha: ", el("b", {}, fmt(v.plochaPud,1) + " m²"),
-    " · obvod: ", el("b", {}, fmt(v.obvod,1) + " m")));
-  vys.append(el("div", {}, "Výška obálky: " + fmt(v.vyska.celkem,2) + " m (z toho nadzemní část " + fmt(v.vyska.nadzemni,2) + " m)"));
-  vys.append(el("div", {}, "Orientační vnější objem: ", el("b", {}, fmt(v.vnejsi,1) + " m³")));
-  vys.append(el("div", {}, "Hrubá podlahová plocha: " + fmt(v.podlahovaHruba,1) + " m² · plocha stěn (bez odečtu otvorů): ", el("b", {}, fmt(v.plochaSten,1) + " m²")));
-  const dleO = Object.keys(v.stenyDleOrientace).filter(o => v.stenyDleOrientace[o] > 0)
-    .map(o => o + " " + fmt(v.stenyDleOrientace[o],1)).join(" · ");
-  if (dleO) vys.append(el("div", {class:"mala"}, "Stěny po orientacích [m²]: " + dleO));
-  if (v.plochaPud > 0 && v.obvod === 0) vys.append(el("div", {class:"mala"}, "Doplň ještě úseky fasády — bez nich se nespočítá plocha stěn ani kontrola oken."));
-  vys.append(el("button", {type:"button", class:"sm g", style:"margin-top:8px", onclick:() => {
-    g.vnejsiObjem = Math.round(v.vnejsi*10)/10;
-    g.evp = g.evp || Math.round(v.podlahovaHruba*10)/10;
-    zmena(); prekreslit();
-  }}, "Převzít do polí níže"));
+  prepocitat();
   box.append(vys);
 
   box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Hodnoty do aplikace RP"), polePole(g, [
@@ -1004,14 +1013,24 @@ R.a3 = () => {
         {k:"typ", l:"Typ", t:"select", opt:TYP_VYPLNE},
         {k:"ram", l:"Rám", t:"select", opt:RAM},
         {k:"zaskleni", l:"Zasklení", t:"select", opt:ZASKLENI},
-        {k:"sirka", l:"Šířka jednoho kusu", t:"number", jed:"m"},
-        {k:"vyska", l:"Výška jednoho kusu", t:"number", jed:"m"},
+        {k:"sirka", l:"Šířka jednoho kusu", t:"number", jed:"m", poPsani:() => prepocti()},
+        {k:"vyska", l:"Výška jednoho kusu", t:"number", jed:"m", poPsani:() => prepocti()},
         {k:"rok", l:"Rok výměny (je-li znám)", t:"number"},
         {k:"u", l:"U (je-li známo z dokumentace)", t:"number", jed:"W/m²·K"},
         {k:"lze", l:"Lze vyměnit", t:"anone"}
       ], "mrizka3"));
       /* Kusy po světových stranách — aplikace RP chce orientaci u každého okna.
          Jeden rozměr se tak zadá jednou a rozepíše se počty na fasády.        */
+      const vys = el("div", {class:"vysledek"});
+      const prepocti = () => {
+        const p = plochaVyplne(v);
+        const rozpis = Object.keys(p.dleOrientace).map(o => o + " " + fmt(p.dleOrientace[o],1)).join(" · ");
+        vys.innerHTML = "";
+        vys.append(el("div", {}, "Jeden kus: " + fmt(p.jedna,2) + " m² · celkem " + p.celkemKs + " ks → ",
+          el("b", {}, fmt(p.celkem,2) + " m²")));
+        if (rozpis) vys.append(el("div", {class:"mala"}, "Po orientacích [m²]: " + rozpis));
+        if (p.jedna > 15) vys.append(el("div", {class:"mala"}, "⚠️ Jeden kus přes 15 m² — zkontroluj, jestli nejsou rozměry v centimetrech."));
+      };
       const fsO = el("fieldset", {class:"blok"});
       fsO.append(el("legend", {}, "Počet kusů po světových stranách"));
       const gr = el("div", {class:"mrizka3"});
@@ -1019,20 +1038,14 @@ R.a3 = () => {
         const p = el("div", {class:"pole"});
         p.append(el("label", {}, o));
         const inp = el("input", {type:"number", inputmode:"numeric", min:"0", step:"1",
-          oninput:ev => { v.kusy[o] = ev.target.value; zmena(); prekreslit(); }});
+          oninput:ev => { v.kusy[o] = ev.target.value; zmena(); prepocti(); }});
         inp.value = nebo(v.kusy[o], "");
         p.append(inp);
         gr.append(p);
       });
       fsO.append(gr);
       b.append(fsO);
-      const p = plochaVyplne(v);
-      const rozpis = Object.keys(p.dleOrientace).map(o => o + " " + fmt(p.dleOrientace[o],1)).join(" · ");
-      const vys = el("div", {class:"vysledek"});
-      vys.append(el("div", {}, "Jeden kus: " + fmt(p.jedna,2) + " m² · celkem " + p.celkemKs + " ks → ",
-        el("b", {}, fmt(p.celkem,2) + " m²")));
-      if (rozpis) vys.append(el("div", {class:"mala"}, "Po orientacích [m²]: " + rozpis));
-      if (p.jedna > 15) vys.append(el("div", {class:"mala"}, "⚠️ Jeden kus přes 15 m² — zkontroluj, jestli nejsou rozměry v centimetrech."));
+      prepocti();
       b.append(vys);
       return b;
     }, "Rozměr zadej jednou a rozepiš počty po světových stranách. Orientace je v aplikaci RP povinná — bez ní nespočítá solární zisky."));
