@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#12603a">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="ikona-192.png">
-<title>Renovační pas — terénní sběr v1.3.0 (ZAVEZA)</title>
+<title>Renovační pas — terénní sběr v1.4.0 (ZAVEZA)</title>
 <style>
 :root{
   --zel:#12603a; --zel2:#1d8b55; --sed:#f4f5f4; --ram:#d6dad7; --txt:#16211b;
@@ -79,12 +79,25 @@ canvas.podpis{width:100%;height:190px;border:1px dashed #9aa79f;border-radius:va
 .pill.ceka{background:#fdf3d8;color:#7a5d00}
 .pill.odesl{background:#e4eefb;color:#0b5cab}
 .skryt{display:none!important}
+/* Tiskový protokol — na obrazovce skrytý, při tisku jediné, co je vidět */
+#tiskDok{display:none}
+#tiskDok h1{font-size:17px;margin:0 0 2px}
+#tiskDok h2{font-size:14px;margin:14px 0 4px;border-bottom:1px solid #999;padding-bottom:2px}
+#tiskDok table{width:100%;border-collapse:collapse;font-size:12px;margin:4px 0}
+#tiskDok td,#tiskDok th{border:1px solid #999;padding:3px 5px;text-align:left;vertical-align:top}
+#tiskDok .hlavicka{font-size:11px;color:#333;margin-bottom:10px}
+#tiskDok .podpisy{display:flex;gap:24px;margin-top:18px}
+#tiskDok .podpisy>div{flex:1}
+#tiskDok .podpisy img{width:100%;height:80px;object-fit:contain;border-bottom:1px solid #333}
+#tiskDok .cara{border-bottom:1px solid #333;height:80px}
 @media print{
   header,nav.taby,.lista,.netisknout{display:none!important}
   main{padding:0;max-width:none}
   body{font-size:12px}
   .karta,fieldset.blok{background:#fff;border:1px solid #999;break-inside:avoid}
   h2.sek{page-break-before:auto}
+  body.tiskne-protokol>*:not(#tiskDok){display:none!important}
+  body.tiskne-protokol #tiskDok{display:block!important}
 }
 </style>
 </head>
@@ -107,7 +120,7 @@ canvas.podpis{width:100%;height:190px;border:1px dashed #9aa79f;border-radius:va
     <li style="margin-bottom:6px">Na <b>Androidu</b> soubor otevřete v Chrome (ne v prohlížeči souborů).</li>
     <li style="margin-bottom:6px">Na <b>notebooku</b> klikněte na soubor pravým tlačítkem → Otevřít v programu → Chrome nebo Edge.</li>
   </ul>
-  <p style="color:#5b655e;font-size:14px;margin:0">Terénní sběr dat pro renovační pasy · ZAVEZA · v1.3.0</p>
+  <p style="color:#5b655e;font-size:14px;margin:0">Terénní sběr dat pro renovační pasy · ZAVEZA · v1.4.0</p>
 </div></main>
 <script>
 /* Běží jako první. Když se sem prohlížeč dostane, skripty fungují a zprávu výše schováme.
@@ -115,7 +128,7 @@ canvas.podpis{width:100%;height:190px;border:1px dashed #9aa79f;border-radius:va
 try { var b = document.getElementById("bezSkriptu"); if (b) b.style.display = "none"; } catch (e) {}
 </script>
 <div class="lista netisknout">
-  <span class="info" id="infoLista">ZAVEZA · v1.3.0</span>
+  <span class="info" id="infoLista">ZAVEZA · v1.4.0</span>
   <div class="radek">
     <button class="sm p" id="btnOdeslat">Dokončit a odeslat →</button>
   </div>
@@ -131,7 +144,7 @@ try { var b = document.getElementById("bezSkriptu"); if (b) b.style.display = "n
 
 /* ---------- 0. Konfigurace ---------- */
 const CFG = {
-  verze: "1.3.0",
+  verze: "1.4.0",
   /* Endpoint na webu Zavezy. Když je prázdný, appka odesílá pouze
      souborem (Sdílet / Uložit do souborů). Doplní se při nasazení. */
   endpoint: "",
@@ -405,6 +418,17 @@ const DOKUMENTY = [
   ["nabidky", "Kopie předběžných cenových nabídek, pokud si je klient nechal zpracovat"]
 ];
 
+/* Prohlášení v Protokolu o návštěvě — používá formulář i tiskový dokument */
+const PROHLASENI = [
+  ["osobne", "Návštěva proběhla osobně na místě u žadatele."],
+  ["doklady", "Žadatel předložil doklady o příjmech domácnosti (u energetické chudoby)."],
+  ["nemovitosti", "Žadatel vlastní nejvýše 2 nemovitosti určené k bydlení."],
+  ["podnikani", "Plocha využívaná k podnikání nepřesahuje 20 % podlahové plochy."],
+  ["pouceni", "Žadatel byl poučen o možnosti změny dodavatele energií a o nastavení záloh."],
+  ["light", "Žadatel byl dotázán na dřívější čerpání podpory NZÚ Light."],
+  ["nezavislost", "Poradce nenabízel konkrétní dodavatele ani výrobky (etický kodex)."]
+];
+
 /* Navrhovaná opatření — dle Protokolu o návštěvě na místě (výzva 2/2026) */
 const OPATRENI = [
   ["A",  "Zateplení obálky budovy (stěny, střecha, podlaha, výplně)"],
@@ -577,17 +601,78 @@ function spoctiDecil(b1){
   return {SJ, prijem, naSJ, prah, splnuje: prijem > 0 && naSJ <= prah, petiny};
 }
 
+/* ---------- Geometrie: rozklad na obdélníkové části + obvod po fasádách ----------
+   Projektovou dokumentaci má jen zhruba každá dvacátá zakázka, takže se dům
+   ve většině případů měří na místě. Půdorys se proto nezadává jako jeden
+   obdélník (domy obdélníkové nejsou), ale jako součet obdélníkových částí,
+   a obvod jako součet naměřených úseků fasády po světových stranách.
+   Ty samé úseky pak dávají plochu stěn pro každou orientaci.                */
+
+function spoctiPudorys(g){
+  const casti = (g.casti || []).map(c => ({a: cislo(c.a), b: cislo(c.b)}));
+  const plocha = casti.reduce((s,c) => s + c.a*c.b, 0);
+  return {plocha, pocetCasti: casti.filter(c => c.a > 0 && c.b > 0).length};
+}
+
+function spoctiFasady(g){
+  const useky = (g.fasady || []).filter(f => cislo(f.delka) > 0);
+  const obvod = useky.reduce((s,f) => s + cislo(f.delka), 0);
+  const dleOrientace = {};
+  ORIENTACE.forEach(o => dleOrientace[o] = 0);
+  useky.forEach(f => { if (f.orientace) dleOrientace[f.orientace] = (dleOrientace[f.orientace] || 0) + cislo(f.delka); });
+  return {obvod, useku: useky.length, dleOrientace};
+}
+
+/* Výška obálky = podlaha + n × (světlá výška + strop) + izolace nad stropem.
+   Přesně ta skladba, kterou v terénu měří poradce (viz zpětná vazba 30. 8.). */
+function spoctiVysku(g){
+  const np = Math.max(0, cislo(g.pocetPodlazi));
+  const svetla = cislo(g.vyskaPodlazi), strop = cislo(g.tlStrop);
+  const podlaha = cislo(g.tlPodlaha), izolace = cislo(g.tlIzolace);
+  const nadzemni = np > 0 ? np * (svetla + strop) : 0;
+  return {celkem: podlaha + nadzemni + izolace, nadzemni, podlaha, izolace};
+}
+
 /* Objem a plochy — zjednodušený rozklad dle metodiky (viz kalkulačka objemu) */
 function spoctiObjem(g){
-  const a = cislo(g.pudorysA), b = cislo(g.pudorysB);
   const hp = cislo(g.vyskaPodlazi), np = Math.max(0, cislo(g.pocetPodlazi));
   const nadez = cislo(g.nadezdivka), hreben = cislo(g.hreben);
-  const plochaPud = a * b;
-  const objemPodlazi = plochaPud * hp * np;
+  /* zpětná kompatibilita: zakázky do v1.3.0 měly jeden obdélník pudorysA × pudorysB */
+  const zCasti = spoctiPudorys(g).plocha;
+  const plochaPud = zCasti > 0 ? zCasti : cislo(g.pudorysA) * cislo(g.pudorysB);
+  const v = spoctiVysku(g);
+  /* objem podlaží: přes změřenou skladbu, jinak postaru přes konstrukční výšku */
+  const objemPodlazi = plochaPud * (v.celkem > 0 ? v.celkem : hp * np);
   /* sedlová střecha / podkroví: průměrná výška = (nadezdívka + hřeben)/2 */
   const objemStrecha = (nadez > 0 || hreben > 0) ? plochaPud * ((nadez + hreben)/2) : 0;
   const vnejsi = objemPodlazi + objemStrecha;
-  return {plochaPud, objemPodlazi, objemStrecha, vnejsi, podlahovaHruba: plochaPud * np};
+  const f = spoctiFasady(g);
+  /* plocha stěn = obvod × nadzemní výška; otvory se odečítají až v kanceláři */
+  const plochaSten = f.obvod * (v.nadzemni > 0 ? v.nadzemni : hp * np);
+  const stenyDleOrientace = {};
+  Object.keys(f.dleOrientace).forEach(o => {
+    stenyDleOrientace[o] = f.dleOrientace[o] * (v.nadzemni > 0 ? v.nadzemni : hp * np);
+  });
+  return {plochaPud, objemPodlazi, objemStrecha, vnejsi, podlahovaHruba: plochaPud * np,
+          obvod: f.obvod, vyska: v, plochaSten, stenyDleOrientace};
+}
+
+/* Plocha výplní podle orientace — kusy se zadávají po světových stranách */
+function plochaVyplne(v){
+  const jedna = cislo(v.sirka) * cislo(v.vyska);
+  const kusy = v.kusy || {};
+  let celkemKs = 0;
+  const dleOrientace = {};
+  ORIENTACE.forEach(o => {
+    const k = Math.max(0, cislo(kusy[o]));
+    if (k > 0) { dleOrientace[o] = k * jedna; celkemKs += k; }
+  });
+  /* zakázky do v1.3.0: jedna orientace + pole „pocet“ */
+  if (celkemKs === 0 && cislo(v.pocet) > 0) {
+    celkemKs = cislo(v.pocet);
+    if (v.orientace) dleOrientace[v.orientace] = celkemKs * jedna;
+  }
+  return {jedna, celkemKs, celkem: jedna * celkemKs, dleOrientace};
 }
 
 /* ---------- 7. Definice sekcí ---------- */
@@ -724,39 +809,98 @@ R.zav = () => {
 
 R.a2 = () => {
   const g = Z.data.a2, box = el("div");
-  box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Pomocný výpočet objemu a ploch"),
-    el("p", {class:"pod"}, "Zjednodušený rozklad: půdorys × výška podlaží; u sedlové střechy průměrná výška = (nadezdívka + hřeben) / 2. U složitých tvarů (mansarda, valba, vikýře) rozlož dům na části a sečti ručně."),
+  g.casti = g.casti || [];
+  g.fasady = g.fasady || [];
+
+  /* 1) Půdorys — rozklad na obdélníkové části */
+  const fsC = el("fieldset", {class:"blok"});
+  fsC.append(el("legend", {}, "Půdorys — rozlož dům na obdélníky"));
+  fsC.append(el("p", {class:"pod"}, "Dům skoro nikdy není jeden obdélník. Rozděl půdorys na obdélníkové části (hlavní hmota, přístavba, zádveří…) a každou změř zvlášť. Plochy se sečtou."));
+  const tC = el("table", {class:"vrstvy"});
+  tC.append(el("thead", {}, el("tr", {}, el("th", {}, "Část"), el("th", {}, "Délka [m]"), el("th", {}, "Šířka [m]"), el("th", {}, "Plocha"), el("th", {}, ""))));
+  const tbC = el("tbody");
+  g.casti.forEach((c, i) => {
+    const inp = (k) => { const e = el("input", {type:"number", inputmode:"decimal", step:"any",
+      oninput:ev => { c[k] = ev.target.value; zmena(); prekreslit(); }}); e.value = nebo(c[k], ""); return e; };
+    tbC.append(el("tr", {},
+      el("td", {}, el("input", {type:"text", value:nebo(c.nazev,""), placeholder:"např. hlavní hmota",
+        oninput:ev => { c.nazev = ev.target.value; zmena(); }})),
+      el("td", {}, inp("a")), el("td", {}, inp("b")),
+      el("td", {}, fmt(cislo(c.a)*cislo(c.b), 1) + " m²"),
+      el("td", {}, el("button", {type:"button", class:"d", onclick:() => { g.casti.splice(i,1); zmena(); prekreslit(); }}, "×"))));
+  });
+  tC.append(tbC);
+  fsC.append(tC);
+  fsC.append(el("button", {type:"button", class:"g sm", style:"margin-top:8px",
+    onclick:() => { g.casti.push({nazev:"", a:"", b:""}); zmena(); prekreslit(); }}, "+ Přidat část půdorysu"));
+  box.append(fsC);
+
+  /* 2) Obvod po fasádách — dává i plochu stěn pro jednotlivé orientace */
+  const fsF = el("fieldset", {class:"blok"});
+  fsF.append(el("legend", {}, "Fasády — změř obvod po úsecích"));
+  fsF.append(el("p", {class:"pod"}, "Obejdi dům a změř každý rovný úsek fasády. Zapiš délku a světovou stranu, na kterou se ten úsek dívá. Z toho vyjde obvod i plocha stěn pro každou orientaci — a ta se pak porovná s okny."));
+  const tF = el("table", {class:"vrstvy"});
+  tF.append(el("thead", {}, el("tr", {}, el("th", {}, "Orientace"), el("th", {}, "Délka úseku [m]"), el("th", {}, "Popis"), el("th", {}, ""))));
+  const tbF = el("tbody");
+  g.fasady.forEach((f, i) => {
+    const sel = el("select", {onchange:ev => { f.orientace = ev.target.value; zmena(); prekreslit(); }});
+    sel.append(el("option", {value:""}, "— vyber —"));
+    ORIENTACE.forEach(o => { const op = el("option", {value:o}, o); if (f.orientace === o) op.selected = true; sel.append(op); });
+    const d = el("input", {type:"number", inputmode:"decimal", step:"any",
+      oninput:ev => { f.delka = ev.target.value; zmena(); prekreslit(); }}); d.value = nebo(f.delka, "");
+    tbF.append(el("tr", {},
+      el("td", {}, sel), el("td", {}, d),
+      el("td", {}, el("input", {type:"text", value:nebo(f.popis,""), placeholder:"např. čelní stěna",
+        oninput:ev => { f.popis = ev.target.value; zmena(); }})),
+      el("td", {}, el("button", {type:"button", class:"d", onclick:() => { g.fasady.splice(i,1); zmena(); prekreslit(); }}, "×"))));
+  });
+  tF.append(tbF);
+  fsF.append(tF);
+  fsF.append(el("button", {type:"button", class:"g sm", style:"margin-top:8px",
+    onclick:() => { g.fasady.push({orientace:"", delka:"", popis:""}); zmena(); prekreslit(); }}, "+ Přidat úsek fasády"));
+  box.append(fsF);
+
+  /* 3) Výšky — přesně ta skladba, kterou poradce měří na místě */
+  box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Výšky"),
+    el("p", {class:"pod"}, "Vnější objem se počítá od spodku podlahové konstrukce po horní líc izolace nad stropem. Změř skladbu, ne jen světlou výšku."),
     polePole(g, [
-      {k:"pudorysA", l:"Půdorys — délka", t:"number", jed:"m"},
-      {k:"pudorysB", l:"Půdorys — šířka", t:"number", jed:"m"},
+      {k:"tlPodlaha", l:"Podlahová konstrukce vč. izolace", t:"number", jed:"m", hint:"např. 0,4 + 0,1 EPS = 0,5"},
       {k:"pocetPodlazi", l:"Počet vytápěných podlaží", t:"number"},
-      {k:"vyskaPodlazi", l:"Konstrukční výška podlaží", t:"number", jed:"m"},
-      {k:"nadezdivka", l:"Nadezdívka (podkroví)", t:"number", jed:"m", hint:"0, pokud podkroví není vytápěné"},
+      {k:"vyskaPodlazi", l:"Světlá výška podlaží", t:"number", jed:"m"},
+      {k:"tlStrop", l:"Tloušťka stropní konstrukce", t:"number", jed:"m"},
+      {k:"tlIzolace", l:"Izolace nad stropem (půda)", t:"number", jed:"m", hint:"0, pokud je podkroví vytápěné"},
+      {k:"nadezdivka", l:"Nadezdívka (vytápěné podkroví)", t:"number", jed:"m", hint:"0, pokud podkroví není vytápěné"},
       {k:"hreben", l:"Výška do hřebene nad podlahou podkroví", t:"number", jed:"m"}
-    ], "mrizka3"),
-    (() => {
-      const v = spoctiObjem(g);
-      return el("div", {class:"vysledek"},
-        el("div", {}, "Zastavěná plocha: ", el("b", {}, fmt(v.plochaPud,1) + " m²")),
-        el("div", {}, "Objem podlaží: " + fmt(v.objemPodlazi,1) + " m³ · objem podkroví: " + fmt(v.objemStrecha,1) + " m³"),
-        el("div", {}, "Orientační vnější objem: ", el("b", {}, fmt(v.vnejsi,1) + " m³")),
-        el("div", {}, "Hrubá podlahová plocha: " + fmt(v.podlahovaHruba,1) + " m²"),
-        el("button", {type:"button", class:"sm g", style:"margin-top:8px", onclick:() => {
-          g.vnejsiObjem = Math.round(v.vnejsi*10)/10;
-          g.evp = g.evp || Math.round(v.podlahovaHruba*10)/10;
-          zmena(); prekreslit();
-        }}, "Převzít do polí níže")
-      );
-    })()
-  ));
+    ], "mrizka3")));
+
+  /* 4) Výsledek */
+  const v = spoctiObjem(g);
+  const vys = el("div", {class:"vysledek"});
+  vys.append(el("div", {}, "Zastavěná plocha: ", el("b", {}, fmt(v.plochaPud,1) + " m²"),
+    " · obvod: ", el("b", {}, fmt(v.obvod,1) + " m")));
+  vys.append(el("div", {}, "Výška obálky: " + fmt(v.vyska.celkem,2) + " m (z toho nadzemní část " + fmt(v.vyska.nadzemni,2) + " m)"));
+  vys.append(el("div", {}, "Orientační vnější objem: ", el("b", {}, fmt(v.vnejsi,1) + " m³")));
+  vys.append(el("div", {}, "Hrubá podlahová plocha: " + fmt(v.podlahovaHruba,1) + " m² · plocha stěn (bez odečtu otvorů): ", el("b", {}, fmt(v.plochaSten,1) + " m²")));
+  const dleO = Object.keys(v.stenyDleOrientace).filter(o => v.stenyDleOrientace[o] > 0)
+    .map(o => o + " " + fmt(v.stenyDleOrientace[o],1)).join(" · ");
+  if (dleO) vys.append(el("div", {class:"mala"}, "Stěny po orientacích [m²]: " + dleO));
+  if (v.plochaPud > 0 && v.obvod === 0) vys.append(el("div", {class:"mala"}, "Doplň ještě úseky fasády — bez nich se nespočítá plocha stěn ani kontrola oken."));
+  vys.append(el("button", {type:"button", class:"sm g", style:"margin-top:8px", onclick:() => {
+    g.vnejsiObjem = Math.round(v.vnejsi*10)/10;
+    g.evp = g.evp || Math.round(v.podlahovaHruba*10)/10;
+    zmena(); prekreslit();
+  }}, "Převzít do polí níže"));
+  box.append(vys);
+
   box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Hodnoty do aplikace RP"), polePole(g, [
     {k:"zastavba", l:"Typ okolní zástavby", t:"select", opt:ZASTAVBA},
     {k:"evp", l:"Energeticky vztažná plocha (EVP)", t:"number", jed:"m²"},
-    {k:"podilVnitrni", l:"Podíl vnitřní podlahové plochy z EVP", t:"number", jed:"%", ph:"80"},
+    {k:"podilVnitrni", l:"Podíl vnitřní podlahové plochy z EVP", t:"number", jed:"%", ph:"85", hint:"Domluveno s Mírou Mikešem: 85 %."},
     {k:"vnitrniPlocha", l:"Vnitřní podlahová plocha", t:"number", jed:"m²"},
     {k:"vnejsiObjem", l:"Vnější objem budovy", t:"number", jed:"m³"},
     {k:"vnitrniObjem", l:"Vnitřní objem budovy", t:"number", jed:"m³"}
   ])));
+  box.append(el("div", {class:"varovani"}, "Mansarda, valbová střecha nebo dům s mnoha vikýři se takhle rozložit nedá — zapiš rozměry do poznámky, vyfoť dům ze všech stran a objem dopočítá kancelář."));
   return box;
 };
 
@@ -852,25 +996,58 @@ R.a3 = () => {
   box.append(el("h3", {}, "Podlahy"), renderKonstrukce("podlahy", TYP_PODLAHY, "podlaha_teren"));
   box.append(el("h3", {}, "Střechy a stropy"), renderKonstrukce("strechy", TYP_STRECHY, "strop_puda"));
   box.append(el("h3", {}, "Otvorové výplně"));
-  box.append(seznam(Z.data.vyplne, "Výplň", () => ({typ:"", ram:"", zaskleni:"", orientace:"", sirka:"", vyska:"", pocet:1, u:"", lze:"", rok:""}),
+  box.append(seznam(Z.data.vyplne, "Výplň", () => ({typ:"", ram:"", zaskleni:"", sirka:"", vyska:"", kusy:{}, u:"", lze:"", rok:""}),
     (v) => {
       const b = el("div");
+      v.kusy = v.kusy || {};
       b.append(polePole(v, [
         {k:"typ", l:"Typ", t:"select", opt:TYP_VYPLNE},
         {k:"ram", l:"Rám", t:"select", opt:RAM},
         {k:"zaskleni", l:"Zasklení", t:"select", opt:ZASKLENI},
-        {k:"orientace", l:"Orientace", t:"select", opt:ORIENTACE},
-        {k:"sirka", l:"Šířka", t:"number", jed:"m"},
-        {k:"vyska", l:"Výška", t:"number", jed:"m"},
-        {k:"pocet", l:"Počet kusů", t:"number"},
+        {k:"sirka", l:"Šířka jednoho kusu", t:"number", jed:"m"},
+        {k:"vyska", l:"Výška jednoho kusu", t:"number", jed:"m"},
         {k:"rok", l:"Rok výměny (je-li znám)", t:"number"},
         {k:"u", l:"U (je-li známo z dokumentace)", t:"number", jed:"W/m²·K"},
         {k:"lze", l:"Lze vyměnit", t:"anone"}
       ], "mrizka3"));
-      const pl = cislo(v.sirka) * cislo(v.vyska) * Math.max(1, cislo(v.pocet));
-      b.append(el("div", {class:"vysledek"}, "Plocha celkem: ", el("b", {}, fmt(pl,2) + " m²")));
+      /* Kusy po světových stranách — aplikace RP chce orientaci u každého okna.
+         Jeden rozměr se tak zadá jednou a rozepíše se počty na fasády.        */
+      const fsO = el("fieldset", {class:"blok"});
+      fsO.append(el("legend", {}, "Počet kusů po světových stranách"));
+      const gr = el("div", {class:"mrizka3"});
+      ORIENTACE.forEach(o => {
+        const p = el("div", {class:"pole"});
+        p.append(el("label", {}, o));
+        const inp = el("input", {type:"number", inputmode:"numeric", min:"0", step:"1",
+          oninput:ev => { v.kusy[o] = ev.target.value; zmena(); prekreslit(); }});
+        inp.value = nebo(v.kusy[o], "");
+        p.append(inp);
+        gr.append(p);
+      });
+      fsO.append(gr);
+      b.append(fsO);
+      const p = plochaVyplne(v);
+      const rozpis = Object.keys(p.dleOrientace).map(o => o + " " + fmt(p.dleOrientace[o],1)).join(" · ");
+      const vys = el("div", {class:"vysledek"});
+      vys.append(el("div", {}, "Jeden kus: " + fmt(p.jedna,2) + " m² · celkem " + p.celkemKs + " ks → ",
+        el("b", {}, fmt(p.celkem,2) + " m²")));
+      if (rozpis) vys.append(el("div", {class:"mala"}, "Po orientacích [m²]: " + rozpis));
+      if (p.jedna > 15) vys.append(el("div", {class:"mala"}, "⚠️ Jeden kus přes 15 m² — zkontroluj, jestli nejsou rozměry v centimetrech."));
+      b.append(vys);
       return b;
-    }, "U oken je povinná orientace — bez ní aplikace RP nespočítá solární zisky."));
+    }, "Rozměr zadej jednou a rozepiš počty po světových stranách. Orientace je v aplikaci RP povinná — bez ní nespočítá solární zisky."));
+  /* Kontrola: okna se musí vejít do stěn */
+  (() => {
+    const stav = spoctiObjem(Z.data.a2);
+    const oknaCelkem = Z.data.vyplne.reduce((s,v) => s + plochaVyplne(v).celkem, 0);
+    if (stav.plochaSten > 0 && oknaCelkem > 0) {
+      const podil = oknaCelkem / stav.plochaSten * 100;
+      const t = "Výplně celkem " + fmt(oknaCelkem,1) + " m² proti ploše stěn " + fmt(stav.plochaSten,1)
+        + " m² — to je " + fmt(podil,0) + " % fasády.";
+      box.append(el("div", {class: podil > 60 ? "chyba" : "vysledek"},
+        podil > 60 ? "⚠️ " + t + " To je moc, zkontroluj rozměry a počty kusů." : t));
+    }
+  })();
   box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Stínění"),
     polePole(Z.data.a3 = Z.data.a3 || {}, [{k:"vnejsiStineni", l:"Je instalováno / navrženo vnější stínění", t:"anone"}])));
   return box;
@@ -1136,6 +1313,111 @@ R.b2 = () => {
 };
 
 /* --- B3 Protokol o návštěvě + podpisy --- */
+/* ---------- Tiskový protokol o návštěvě ----------
+   Do v1.3.0 se tisklo to, co bylo na obrazovce — tedy formulář se select boxy
+   a prázdnými zaškrtávátky. Tady se skládá skutečný dokument: hlavička,
+   identifikace, opatření a prohlášení slovy, podpisy jako obrázky.          */
+function dokumentProtokolu(){
+  const d = Z.data, a = d.a1 || {}, b = d.b3 || {};
+  const poradce = d.a0Poradce === "jiný…" ? (d.a0PoradceJiny || "—") : (d.a0Poradce || "—");
+  const dok = el("div", {id:"tiskDok"});
+  const radek = (popis, hodnota) => el("tr", {}, el("th", {style:"width:34%"}, popis), el("td", {}, hodnota || "—"));
+
+  dok.append(el("h1", {}, "PROTOKOL O NÁVŠTĚVĚ NA MÍSTĚ"));
+  dok.append(el("div", {class:"hlavicka"},
+    "Renovační pas · Nová zelená úsporám · výzva NPO 2/2026",
+    el("br", {}),
+    "Subjekt: " + CFG.subjekt + " · energetický specialista: " + CFG.garant));
+
+  dok.append(el("h2", {}, "Návštěva"));
+  const t1 = el("table", {});
+  t1.append(radek("Datum návštěvy", a.datumNavstevy), radek("Čas příjezdu", a.cas),
+    radek("Poradce", poradce + (d.a0Kod ? " · kód " + d.a0Kod : "")),
+    radek("Výstup návštěvy", d.a0Vystup));
+  dok.append(t1);
+
+  dok.append(el("h2", {}, "Žadatel a objekt"));
+  const t2 = el("table", {});
+  t2.append(radek("Žadatel", [a.zadJmeno, a.zadPrijmeni].filter(Boolean).join(" ")),
+    radek("Datum narození", a.zadDatumNar),
+    radek("Adresa objektu", [a.ulice, a.cp, a.obec, a.psc].filter(Boolean).join(" ")),
+    radek("Typ využití", a.typVyuziti), radek("Období výstavby", a.obdobiVystavby),
+    radek("Energeticky vztažná plocha", (d.a2 && d.a2.evp) ? d.a2.evp + " m²" : ""),
+    radek("Pohlaví vlastníka", b.pohlavi), radek("Věková skupina", b.vek));
+  dok.append(t2);
+
+  const zav = ZAVADY.filter(([k]) => (d.zavady || {})[k]).map(([, t]) => t);
+  if (zav.length || d.zavadyText) {
+    dok.append(el("h2", {}, "Zjištěné nedostatky"));
+    const ul = el("ul", {});
+    zav.forEach(t => ul.append(el("li", {}, t)));
+    if (d.zavadyText) ul.append(el("li", {}, d.zavadyText));
+    dok.append(ul);
+  }
+
+  dok.append(el("h2", {}, "Navrhovaná opatření"));
+  const vyb = (b.opatreni || []);
+  if (!vyb.length) dok.append(el("p", {}, "Nebyla navržena žádná opatření."));
+  else {
+    const t3 = el("table", {});
+    t3.append(el("tr", {}, el("th", {}, "Kód"), el("th", {}, "Opatření"), el("th", {}, "Etapa"), el("th", {}, "Přeje si klient")));
+    vyb.forEach(k => {
+      const x = (b.detail || {})[k] || {};
+      const nazev = (OPATRENI.find(o => o[0] === k) || [k, k])[1];
+      const et = x.etapa === "fin" ? "finální stav" : (x.etapa ? x.etapa + ". etapa" : "—");
+      const ch = x.chce === "ano" ? "ano" : (x.chce === "ne" ? "ne (doporučeno poradcem)" : "—");
+      t3.append(el("tr", {}, el("td", {}, k), el("td", {}, nazev), el("td", {}, et), el("td", {}, ch)));
+    });
+    dok.append(t3);
+  }
+
+  if ((d.clenove || []).length) {
+    dok.append(el("h2", {}, "Členové domácnosti"));
+    const t4 = el("table", {});
+    t4.append(el("tr", {}, el("th", {}, "Jméno a příjmení"), el("th", {}, "Datum narození")));
+    d.clenove.forEach(c => t4.append(el("tr", {},
+      el("td", {}, [c.jmeno, c.prijmeni].filter(Boolean).join(" ") || "—"), el("td", {}, c.narozeni || "—"))));
+    dok.append(t4);
+  }
+
+  dok.append(el("h2", {}, "Prohlášení"));
+  const ulP = el("ul", {});
+  PROHLASENI.forEach(([k, txt]) => ulP.append(el("li", {}, ((b.prohlaseni || {})[k] ? "ANO — " : "NE — ") + txt)));
+  dok.append(ulP);
+
+  if (b.poznamka) { dok.append(el("h2", {}, "Poznámky z návštěvy")); dok.append(el("p", {}, b.poznamka)); }
+
+  dok.append(el("h2", {}, "Podpisy"));
+  dok.append(el("p", {}, "V " + (a.obec || "…………………") + " dne " + (a.datumNavstevy || "…………………") + "."));
+  const pod = el("div", {class:"podpisy"});
+  [["Žadatel", b.podpisKlient, [a.zadJmeno, a.zadPrijmeni].filter(Boolean).join(" ")],
+   ["Poradce", b.podpisPoradce, poradce]].forEach(([popis, data, jmeno]) => {
+    const c = el("div", {});
+    c.append(data ? el("img", {src:data, alt:popis}) : el("div", {class:"cara"}));
+    c.append(el("div", {}, popis + ": " + (jmeno || "—")));
+    c.append(el("div", {style:"font-size:11px;color:#555"}, data ? "Podepsáno elektronicky na displeji zařízení." : "⚠️ Podpis chybí."));
+    pod.append(c);
+  });
+  dok.append(pod);
+  dok.append(el("p", {style:"font-size:10px;color:#666;margin-top:14px"},
+    "Vygenerováno terénní aplikací ZAVEZA v" + CFG.verze + " · " + new Date().toLocaleString("cs-CZ")));
+  return dok;
+}
+
+function tiskniProtokol(){
+  const stary = document.getElementById("tiskDok");
+  if (stary) stary.remove();
+  document.body.appendChild(dokumentProtokolu());
+  document.body.classList.add("tiskne-protokol");
+  const uklid = () => {
+    document.body.classList.remove("tiskne-protokol");
+    const n = document.getElementById("tiskDok"); if (n) n.remove();
+    window.removeEventListener("afterprint", uklid);
+  };
+  window.addEventListener("afterprint", uklid);
+  setTimeout(() => { window.print(); setTimeout(uklid, 1500); }, 60);
+}
+
 function platnoPodpisu(klic, popisek){
   const wrap = el("div", {class:"pole"});
   wrap.append(el("label", {}, popisek));
@@ -1163,6 +1445,10 @@ function platnoPodpisu(klic, popisek){
 
 R.b3 = () => {
   const b = Z.data.b3, a = Z.data.a1, box = el("div");
+  /* Tlačítko nahoře i dole — v1.3.0 bylo jen úplně dole za podpisovými plátny a nikdo ho nenašel. */
+  box.append(el("div", {class:"radek netisknout", style:"margin-bottom:10px"},
+    el("button", {type:"button", class:"p", onclick:tiskniProtokol}, "🖨 Vytisknout protokol / uložit jako PDF"),
+    el("span", {class:"hint"}, "Vytiskne hotový dokument, ne tenhle formulář. Vyplň nejdřív opatření, prohlášení a podpisy.")));
   box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Žadatel"),
     polePole(b, [
       {k:"pohlavi", l:"Pohlaví vlastníka", t:"select", opt:POHLAVI},
@@ -1170,33 +1456,48 @@ R.b3 = () => {
     ], "mrizka"),
     el("div", {class:"hint"}, "Povinné indikátory výzvy — sbírají se o vlastníkovi nemovitosti.")));
 
+  /* Navrhovaná opatření + etapizace.
+     Aplikace RP má u každého opatření dvě povinná pole: do které etapy patří
+     a jestli si ho klient přeje. Kancelář si to nevymyslí — musí přijít z terénu. */
+  b.detail = b.detail || {};
   const fsOp = el("fieldset", {class:"blok"});
-  fsOp.append(el("legend", {}, "Navrhovaná opatření"));
+  fsOp.append(el("legend", {}, "Navrhovaná opatření a etapy"));
+  fsOp.append(el("p", {class:"pod"}, "U každého zaškrtnutého opatření vyber etapu a zeptej se klienta, jestli ho chce. Obě pole jsou v aplikaci RP povinná."));
   OPATRENI.forEach(([kod, txt]) => {
+    const vybrano = (b.opatreni || []).includes(kod);
+    const wrap = el("div", {class: vybrano ? "karta" : ""});
     const l = el("label", {class:"chk"});
     const c = el("input", {type:"checkbox", onchange:e => {
       const s = new Set(b.opatreni || []);
-      e.target.checked ? s.add(kod) : s.delete(kod);
-      b.opatreni = [...s]; zmena();
+      if (e.target.checked) { s.add(kod); b.detail[kod] = b.detail[kod] || {etapa:"", chce:""}; }
+      else s.delete(kod);
+      b.opatreni = [...s]; zmena(); prekreslit();
     }});
-    c.checked = (b.opatreni || []).includes(kod);
+    c.checked = vybrano;
     l.append(c, el("span", {}, el("b", {}, kod + " — "), txt));
-    fsOp.append(l);
+    wrap.append(l);
+    if (vybrano) {
+      const d = b.detail[kod] = b.detail[kod] || {etapa:"", chce:""};
+      const gr = el("div", {class:"mrizka"});
+      const selE = el("select", {onchange:e => { d.etapa = e.target.value; zmena(); }});
+      [["", "— vyber etapu —"], ["1", "1. etapa"], ["2", "2. etapa"], ["3", "3. etapa"], ["fin", "finální stav"]]
+        .forEach(([v, t]) => { const o = el("option", {value:v}, t); if (d.etapa === v) o.selected = true; selE.append(o); });
+      const pE = el("div", {class:"pole"}); pE.append(el("label", {}, "Úprava v etapě pro cílený stav"), selE);
+      const selC = el("select", {onchange:e => { d.chce = e.target.value; zmena(); }});
+      [["", "— vyber —"], ["ano", "ano, klient si přeje"], ["ne", "ne, jen doporučeno poradcem"]]
+        .forEach(([v, t]) => { const o = el("option", {value:v}, t); if (d.chce === v) o.selected = true; selC.append(o); });
+      const pC = el("div", {class:"pole"}); pC.append(el("label", {}, "Požadovaná rekonstrukce klientem"), selC);
+      gr.append(pE, pC);
+      wrap.append(gr);
+      if (!d.etapa || !d.chce) wrap.append(el("div", {class:"mala"}, "Doplň obě pole — bez nich se opatření v aplikaci RP neuloží."));
+    }
+    fsOp.append(wrap);
   });
   box.append(fsOp);
 
-  const PROHL = [
-    ["osobne", "Návštěva proběhla osobně na místě u žadatele."],
-    ["doklady", "Žadatel předložil doklady o příjmech domácnosti (u energetické chudoby)."],
-    ["nemovitosti", "Žadatel vlastní nejvýše 2 nemovitosti určené k bydlení."],
-    ["podnikani", "Plocha využívaná k podnikání nepřesahuje 20 % podlahové plochy."],
-    ["pouceni", "Žadatel byl poučen o možnosti změny dodavatele energií a o nastavení záloh."],
-    ["light", "Žadatel byl dotázán na dřívější čerpání podpory NZÚ Light."],
-    ["nezavislost", "Poradce nenabízel konkrétní dodavatele ani výrobky (etický kodex)."]
-  ];
   const fsP = el("fieldset", {class:"blok"});
   fsP.append(el("legend", {}, "Prohlášení"));
-  PROHL.forEach(([k, txt]) => {
+  PROHLASENI.forEach(([k, txt]) => {
     const l = el("label", {class:"chk"});
     const c = el("input", {type:"checkbox", onchange:e => { b.prohlaseni[k] = e.target.checked; zmena(); }});
     c.checked = !!b.prohlaseni[k];
@@ -1216,8 +1517,8 @@ R.b3 = () => {
     platnoPodpisu("podpisKlient", "Podpis žadatele"),
     platnoPodpisu("podpisPoradce", "Podpis poradce")));
 
-  box.append(el("div", {class:"radek netisknout"},
-    el("button", {type:"button", class:"p", onclick:() => window.print()}, "🖨 Tisk / uložit jako PDF"),
+  box.append(el("div", {class:"radek netisknout", style:"margin-top:10px"},
+    el("button", {type:"button", class:"p", onclick:tiskniProtokol}, "🖨 Vytisknout protokol / uložit jako PDF"),
     el("span", {class:"hint"}, "Na iPadu: Tisk → rozevřít náhled → Sdílet → Uložit do souborů.")));
   return box;
 };
@@ -1316,7 +1617,8 @@ function souhrnText(){
         + (u.U ? " · U = " + fmt(u.U,3) + " W/m²·K" : " · U nespočteno"));
     });
   });
-  r.push("  Výplní: " + d.vyplne.length + " (celkem " + fmt(d.vyplne.reduce((s,v) => s + cislo(v.sirka)*cislo(v.vyska)*Math.max(1,cislo(v.pocet)), 0), 1) + " m²)");
+  r.push("  Výplní: " + d.vyplne.length + " (celkem " + fmt(d.vyplne.reduce((s,v) => s + plochaVyplne(v).celkem, 0), 1) + " m², "
+    + d.vyplne.reduce((s,v) => s + plochaVyplne(v).celkemKs, 0) + " ks)");
   r.push("");
   r.push("TECHNIKA");
   d.zdroje.forEach((s,i) => r.push("  Zdroj " + (i+1) + ": " + (s.typ||"—") + " · " + (s.energonositel||"—") + " · " + (s.podil||"?") + " %"));
@@ -1342,7 +1644,12 @@ function souhrnText(){
   }
   r.push("");
   r.push("PROTOKOL");
-  r.push("  Navrhovaná opatření: " + ((d.b3.opatreni||[]).join(", ") || "—"));
+  r.push("  Navrhovaná opatření: " + ((d.b3.opatreni||[]).map(k => {
+    const x = (d.b3.detail||{})[k] || {};
+    const e = x.etapa ? (x.etapa === "fin" ? "finální stav" : x.etapa + ". etapa") : "etapa neurčena";
+    const c = x.chce === "ano" ? "klient chce" : (x.chce === "ne" ? "doporučeno poradcem" : "přání neurčeno");
+    return k + " (" + e + ", " + c + ")";
+  }).join("; ") || "—"));
   r.push("  Podpis žadatele: " + (d.b3.podpisKlient ? "ANO" : "CHYBÍ") + " · podpis poradce: " + (d.b3.podpisPoradce ? "ANO" : "CHYBÍ"));
   r.push("  Fotek: " + d.fotky.length);
   if (d.b3.poznamka) { r.push(""); r.push("POZNÁMKY: " + d.b3.poznamka); }
@@ -1492,7 +1799,10 @@ R.ex = () => {
     el("div", {class:"radek", style:"margin-top:4px"},
       el("button", {class:"g sm", onclick:() => odeslatSdilenim(!!Z.sFotkami)}, "Odeslat přes sdílení"),
       el("button", {class:"g sm", onclick:ulozitSoubor}, "Jen uložit soubor"),
-      el("button", {class:"g sm", onclick:ulozitCSV}, "CSV pro kancelář"))));
+      el("button", {class:"g sm", onclick:ulozitCSV}, "CSV pro kancelář")),
+    el("div", {class:"hint", style:"margin-top:12px"}, "Protokol o návštěvě k podpisu:"),
+    el("div", {class:"radek"},
+      el("button", {class:"g sm", onclick:tiskniProtokol}, "🖨 Vytisknout protokol / uložit jako PDF"))));
 
 return box;
 };
