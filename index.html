@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#12603a">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="ikona-192.png">
-<title>Renovační pas — terénní sběr v1.4.1 (ZAVEZA)</title>
+<title>Renovační pas — terénní sběr v1.5.0 (ZAVEZA)</title>
 <style>
 :root{
   --zel:#12603a; --zel2:#1d8b55; --sed:#f4f5f4; --ram:#d6dad7; --txt:#16211b;
@@ -48,6 +48,11 @@ textarea{min-height:84px}
 .ano-ne button.akt{background:var(--zel);color:#fff;border-color:var(--zel)}
 .mrizka{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .mrizka3{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.mrizka4{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:8px}
+.rezimPruh{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;border-bottom:1px solid var(--ram);flex-wrap:wrap}
+.rezimPruh .lbl{font-size:13px;color:#4a5b52;font-weight:600}
+.rezimPruh button{background:#fff;border:1px solid var(--ram);color:#4a544d;font-weight:600;padding:7px 14px;min-height:38px;font-size:14px}
+.rezimPruh button.akt{background:var(--zel);color:#fff;border-color:var(--zel)}
 fieldset.blok{border:1px solid var(--ram);border-radius:var(--r);padding:12px;margin:0 0 12px;background:#fff}
 fieldset.blok legend{font-weight:700;padding:0 6px;font-size:15px;color:var(--zel)}
 .blok-hl{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
@@ -91,7 +96,7 @@ canvas.podpis{width:100%;height:190px;border:1px dashed #9aa79f;border-radius:va
 #tiskDok .podpisy img{width:100%;height:80px;object-fit:contain;border-bottom:1px solid #333}
 #tiskDok .cara{border-bottom:1px solid #333;height:80px}
 @media print{
-  header,nav.taby,.lista,.netisknout{display:none!important}
+  header,nav.taby,.rezimPruh,.lista,.netisknout{display:none!important}
   main{padding:0;max-width:none}
   body{font-size:12px}
   .karta,fieldset.blok{background:#fff;border:1px solid #999;break-inside:avoid}
@@ -107,6 +112,7 @@ canvas.podpis{width:100%;height:190px;border:1px dashed #9aa79f;border-radius:va
   <span class="stav" id="stavUlozeni">—</span>
   <button class="sm g" id="btnSeznam">Zakázky</button>
 </header>
+<div class="rezimPruh" id="rezimPruh"></div>
 <nav class="taby" id="taby"></nav>
 <main id="obsah"><div id="bezSkriptu" style="padding:6px 0">
   <h2 style="font-size:20px;margin:4px 0 8px">Appka se nespustila</h2>
@@ -120,7 +126,7 @@ canvas.podpis{width:100%;height:190px;border:1px dashed #9aa79f;border-radius:va
     <li style="margin-bottom:6px">Na <b>Androidu</b> soubor otevřete v Chrome (ne v prohlížeči souborů).</li>
     <li style="margin-bottom:6px">Na <b>notebooku</b> klikněte na soubor pravým tlačítkem → Otevřít v programu → Chrome nebo Edge.</li>
   </ul>
-  <p style="color:#5b655e;font-size:14px;margin:0">Terénní sběr dat pro renovační pasy · ZAVEZA · v1.4.1</p>
+  <p style="color:#5b655e;font-size:14px;margin:0">Terénní sběr dat pro renovační pasy · ZAVEZA · v1.5.0</p>
 </div></main>
 <script>
 /* Běží jako první. Když se sem prohlížeč dostane, skripty fungují a zprávu výše schováme.
@@ -128,7 +134,7 @@ canvas.podpis{width:100%;height:190px;border:1px dashed #9aa79f;border-radius:va
 try { var b = document.getElementById("bezSkriptu"); if (b) b.style.display = "none"; } catch (e) {}
 </script>
 <div class="lista netisknout">
-  <span class="info" id="infoLista">ZAVEZA · v1.4.1</span>
+  <span class="info" id="infoLista">ZAVEZA · v1.5.0</span>
   <div class="radek">
     <button class="sm p" id="btnOdeslat">Dokončit a odeslat →</button>
   </div>
@@ -144,7 +150,7 @@ try { var b = document.getElementById("bezSkriptu"); if (b) b.style.display = "n
 
 /* ---------- 0. Konfigurace ---------- */
 const CFG = {
-  verze: "1.4.1",
+  verze: "1.5.0",
   /* Endpoint na webu Zavezy. Když je prázdný, appka odesílá pouze
      souborem (Sdílet / Uložit do souborů). Doplní se při nasazení. */
   endpoint: "",
@@ -295,7 +301,7 @@ const uid = () => "z" + Date.now().toString(36) + Math.random().toString(36).sli
 const KRAJE = ["Praha","Středočeský","Jihočeský","Plzeňský","Karlovarský","Ústecký","Liberecký","Královéhradecký","Pardubický","Vysočina","Jihomoravský","Olomoucký","Zlínský","Moravskoslezský"];
 const ORIENTACE = ["S","SV","V","JV","J","JZ","Z","SZ"];
 const ENERGONOSITEL = ["zemní plyn","elektřina","hnědé uhlí","černé uhlí","koks","kusové dřevo","dřevní pelety","dřevní štěpka","LTO / nafta","propan / LPG","CZT (dálkové teplo)","energie prostředí (TČ)","jiné"];
-const TYP_ZDROJE = ["kotel plynový standardní","kotel plynový kondenzační","kotel na uhlí (odhořívací)","kotel na uhlí (prohořívací)","kotel na uhlí automatický","kotel na biomasu ruční","kotel na biomasu automatický","krbová kamna / lokální topidlo","elektrokotel","přímotopy / el. panely","elektrická akumulační kamna","tepelné čerpadlo vzduch-voda","tepelné čerpadlo země-voda","tepelné čerpadlo vzduch-vzduch","předávací stanice CZT","jiný"];
+const TYP_ZDROJE = ["kotel plynový standardní","kotel plynový kondenzační","kotel na uhlí (odhořívací)","kotel na uhlí (prohořívací)","kotel na uhlí automatický","kotel na biomasu ruční","kotel na biomasu automatický","krbová kamna / lokální topidlo","krbová kamna s výměníkem do otopné soustavy","elektrokotel","přímotopy / el. panely","elektrické topné těleso (drát) v podlaze","elektrické topné fólie / rohože","infrapanely","elektrická akumulační kamna","tepelné čerpadlo vzduch-voda","tepelné čerpadlo země-voda","tepelné čerpadlo vzduch-vzduch","předávací stanice CZT","jiný"];
 const OTOPNA_SOUSTAVA = ["teplovodní — desková otopná tělesa","teplovodní — litinová otopná tělesa","teplovodní — podlahové vytápění","teplovodní — stěnové vytápění","elektrická přímotopná tělesa","elektrická podlahová","teplovzdušné rozvody","lokální (bez rozvodů)","kombinace"];
 const CERPADLA = ["bez oběhového čerpadla","staré neregulované čerpadlo","čerpadlo s regulací otáček (úsporné)","nevím"];
 const ZDROJ_TV = ["společný se zdrojem vytápění","samostatný plynový ohřívač","průtokový plynový ohřívač","elektrický zásobníkový bojler","elektrický průtokový ohřívač","tepelné čerpadlo na TV","solární termický systém","CZT","jiný"];
@@ -449,6 +455,7 @@ function prazdnaZakazka(){
     zmeneno: new Date().toISOString(),
     odeslano: null,
     ceka: false,
+    rezim: "navsteva",       // "navsteva" u zákazníka · "kancelar" při dopracování
     data: {
       a1:{datumNavstevy:dnes()}, a2:{}, a6:{}, a7:{}, a8:{}, b1:{}, b3:{opatreni:[], prohlaseni:{}},
       zavady:{}, zavadyText:"", dokumenty:{},
@@ -539,17 +546,25 @@ function polePole(obj, defs, tridaMrizky){
 }
 
 /* Opakovatelný seznam bloků */
-function seznam(list, titulek, novyFn, renderFn, popis){
+/* dupl = zobrazit tlačítko „Duplikovat“. Prochy si na papíře kreslí šipku „stejné jako předchozí“,
+   protože stejných oken bývá na fasádě několik — tohle je totéž jedním ťuknutím. */
+function seznam(list, titulek, novyFn, renderFn, popis, dupl){
   const box = el("div");
   if (popis) box.append(el("p", {class:"pod"}, popis));
   list.forEach((polozka, i) => {
     const fs = el("fieldset", {class:"blok"});
     fs.append(el("legend", {}, titulek + " " + (i+1)));
     fs.append(renderFn(polozka, i));
-    fs.append(el("div", {class:"radek", style:"justify-content:flex-end;margin-top:6px"},
-      el("button", {type:"button", class:"d", onclick:() => {
-        if (confirm("Opravdu smazat „" + titulek + " " + (i+1) + "“?")) { list.splice(i,1); zmena(); prekreslit(); }
-      }}, "Smazat")));
+    const nastroje = el("div", {class:"radek", style:"justify-content:flex-end;margin-top:6px"});
+    if (dupl) nastroje.append(el("button", {type:"button", class:"g", onclick:() => {
+      const kopie = JSON.parse(JSON.stringify(polozka));
+      delete kopie._id;
+      list.splice(i+1, 0, kopie); zmena(); prekreslit();
+    }}, "Duplikovat"));
+    nastroje.append(el("button", {type:"button", class:"d", onclick:() => {
+      if (confirm("Opravdu smazat „" + titulek + " " + (i+1) + "“?")) { list.splice(i,1); zmena(); prekreslit(); }
+    }}, "Smazat"));
+    fs.append(nastroje);
     box.append(fs);
   });
   box.append(el("button", {type:"button", class:"p", onclick:() => { list.push(novyFn()); zmena(); prekreslit(); }},
@@ -658,6 +673,12 @@ function spoctiObjem(g){
           obvod: f.obvod, vyska: v, plochaSten, stenyDleOrientace};
 }
 
+/* Zóna, do které otvor vede. Prochy si to na náčrtu značí šipkou „→ DÍLNA“ — a je to zásadní:
+   do obálky budovy patří jen otvory do venkovního prostoru, ostatní se musí odečíst. */
+const ZONA_VYPLNE = ["do venkovního prostoru", "do nevytápěného prostoru (dílna, garáž, půda)", "do sousední budovy"];
+function zonaVyplne(v){ return v.zona || ZONA_VYPLNE[0]; }
+function jeVenkovni(v){ return zonaVyplne(v) === ZONA_VYPLNE[0]; }
+
 /* Plocha výplní podle orientace — kusy se zadávají po světových stranách */
 function plochaVyplne(v){
   const jedna = cislo(v.sirka) * cislo(v.vyska);
@@ -677,23 +698,32 @@ function plochaVyplne(v){
 }
 
 /* ---------- 7. Definice sekcí ---------- */
+/* rez: "t" jen Návštěva · "k" jen Kancelář · "tk" v obou.
+   Cíl je Prochyho postup: u zákazníka se sbírá to, co nejde získat jinde, zbytek počítá kancelář. */
 const SEKCE = [
-  {id:"a0", tab:"Návštěva",  nazev:"Návštěva a poradce", pod:"Vyplní se jednou na začátku. Poradce a kód se předvyplní z posledního záznamu."},
-  {id:"a1", tab:"A1 Budova", nazev:"A1 · Budova", pod:"Pořadí polí odpovídá sekci „Budova“ v aplikaci RP — v kanceláři se přepisuje shora dolů."},
-  {id:"zav", tab:"Závady", nazev:"Zjištěné nedostatky, závady a problémy v budově", pod:"Sekce 3 kontrolního listu SFŽP. Právě z ní vyplývá, proč se která opatření navrhují — projdi ji s klientem."},
-  {id:"a2", tab:"A2 Geometrie", nazev:"A2 · Geometrie budovy", pod:"Změř půdorys a výšky; objem se dopočítá rozkladem na části (SketchUp není potřeba)."},
-  {id:"a3", tab:"A3 Obálka", nazev:"A3 · Obálkové konstrukce", pod:"Aplikace RP chce U přímo. Zadej skladbu po vrstvách — U se spočítá dle ČSN EN ISO 6946."},
-  {id:"a4", tab:"A4 Vytápění", nazev:"A4 · Zdroje tepla na vytápění", pod:"Vyfoť štítek zdroje (záložka Foto) — výkon a rok se pak dohledá v kanceláři."},
-  {id:"a5", tab:"A5 Teplá voda", nazev:"A5 · Zdroje tepla pro ohřev TV", pod:""},
-  {id:"a6", tab:"A6 Větrání", nazev:"A6 · Větrání, chlazení a osvětlení", pod:""},
-  {id:"a7", tab:"A7 Solár", nazev:"A7 · Solární termický ohřev TV", pod:""},
-  {id:"a8", tab:"A8 FVE", nazev:"A8 · Fotovoltaika", pod:""},
-  {id:"sp", tab:"Spotřeby", nazev:"Spotřeby a ceny energií", pod:"Z vyúčtování za poslední rok. Slouží pro kontrolu výpočtu i pro žádost (dodaná energie MWh/rok)."},
-  {id:"b1", tab:"B1 Decil", nazev:"B1 · Energetická chudoba (příjmový decil)", pod:"Jen když se řeší dotace pro nízkopříjmovou domácnost. Prahy: 3. decil 25 426 Kč, 5. decil 31 058 Kč na spotřební jednotku."},
-  {id:"b2", tab:"B2 Foto", nazev:"B2 · Fotodokumentace", pod:"Povinná příloha žádosti. Fotky zůstávají v zařízení, dokud je neodešleš."},
-  {id:"b3", tab:"B3 Protokol", nazev:"B3 · Protokol o návštěvě na místě", pod:"Povinný podepsaný výstup návštěvy. Podepisuje žadatel i poradce — lze bez signálu."},
-  {id:"ex", tab:"Export", nazev:"Kontrola a odeslání", pod:"Zkontroluj úplnost, ulož soubor a odešli, až budeš na signálu."}
+  {id:"a0", tab:"Návštěva", rez:"tk", nazev:"Návštěva a poradce", pod:"Vyplní se jednou na začátku. Poradce a kód se předvyplní z posledního záznamu."},
+  {id:"a1", tab:"A1 Budova", rez:"tk", nazev:"A1 · Budova", pod:"Pořadí polí odpovídá sekci „Budova“ v aplikaci RP — v kanceláři se přepisuje shora dolů."},
+  {id:"a2", tab:"A2 Geometrie", rez:"tk", nazev:"A2 · Geometrie budovy", pod:"Změř půdorys a výšky; objem se dopočítá rozkladem na části (SketchUp není potřeba)."},
+  {id:"vyp", tab:"Fasády a otvory", rez:"tk", nazev:"A3a · Fasády a otvorové výplně", pod:"Postupuj po fasádách jako při obhlídce: vyber stranu, projdi ji a přidávej otvory."},
+  {id:"a3", tab:"A3 Skladby", rez:"tk", nazev:"A3b · Skladby konstrukcí", pod:"Aplikace RP chce U přímo. Zadej skladbu po vrstvách — U se spočítá dle ČSN EN ISO 6946."},
+  {id:"tech", tab:"Technika", rez:"t", nazev:"Technika budovy", pod:"Vytápění, teplá voda, větrání, solár a FVE na jedné stránce — tak, jak se to na místě obchází."},
+  {id:"a4", tab:"A4 Vytápění", rez:"k", nazev:"A4 · Zdroje tepla na vytápění", pod:"Vyfoť štítek zdroje (záložka Foto) — výkon a rok se pak dohledá v kanceláři."},
+  {id:"a5", tab:"A5 Teplá voda", rez:"k", nazev:"A5 · Zdroje tepla pro ohřev TV", pod:""},
+  {id:"a6", tab:"A6 Větrání", rez:"k", nazev:"A6 · Větrání, chlazení a osvětlení", pod:""},
+  {id:"a7", tab:"A7 Solár", rez:"k", nazev:"A7 · Solární termický ohřev TV", pod:""},
+  {id:"a8", tab:"A8 FVE", rez:"k", nazev:"A8 · Fotovoltaika", pod:""},
+  {id:"zav", tab:"Závady", rez:"tk", nazev:"Zjištěné nedostatky, závady a problémy v budově", pod:"Sekce 3 kontrolního listu SFŽP. Právě z ní vyplývá, proč se která opatření navrhují — projdi ji s klientem."},
+  {id:"sp", tab:"Spotřeby", rez:"tk", nazev:"Spotřeby a ceny energií", pod:"Z vyúčtování za poslední rok. Slouží pro kontrolu výpočtu i pro žádost (dodaná energie MWh/rok)."},
+  {id:"b1", tab:"B1 Decil", rez:"tk", nazev:"B1 · Energetická chudoba (příjmový decil)", pod:"Jen když se řeší dotace pro nízkopříjmovou domácnost. Prahy: 3. decil 25 426 Kč, 5. decil 31 058 Kč na spotřební jednotku."},
+  {id:"b2", tab:"B2 Foto", rez:"tk", nazev:"B2 · Fotodokumentace", pod:"Povinná příloha žádosti. Fotky zůstávají v zařízení, dokud je neodešleš."},
+  {id:"b3", tab:"B3 Protokol", rez:"tk", nazev:"B3 · Protokol o návštěvě na místě", pod:"Povinný podepsaný výstup návštěvy. Podepisuje žadatel i poradce — lze bez signálu."},
+  {id:"ex", tab:"Export", rez:"tk", nazev:"Kontrola a odeslání", pod:"Zkontroluj úplnost, ulož soubor a odešli, až budeš na signálu."}
 ];
+/* Sekce viditelné v aktuálním režimu */
+function sekceRezimu(){
+  const r = (Z && Z.rezim) === "kancelar" ? "k" : "t";
+  return SEKCE.filter(s => s.rez.indexOf(r) >= 0);
+}
 
 /* Kontrola vyplněnosti sekce (pro fajfku v navigaci) */
 function hotovo(id){
@@ -702,13 +732,16 @@ function hotovo(id){
     case "a0": return !!(d.a1.datumNavstevy && d.a0Poradce);
     case "a1": return !!(d.a1.obec && d.a1.typVyuziti);
     case "zav": return Object.values(d.zavady || {}).some(Boolean) || !!(d.zavadyText || "").trim();
-    case "a2": return cislo(d.a2.evp) > 0;
-    case "a3": return (d.steny.length + d.strechy.length + d.podlahy.length) > 0 && d.vyplne.length > 0;
+    case "a2": return cislo(d.a2.evp) > 0 || (d.a2.fasady || []).length > 0;
+    case "vyp": return d.vyplne.length > 0;
+    case "a3": return (d.steny.length + d.strechy.length + d.podlahy.length) > 0;
     case "a4": return d.zdroje.length > 0;
     case "a5": return d.zdrojeTV.length > 0;
     case "a6": return !!d.a6.rizeneVetrani;
     case "a7": return !!d.a7.instalovan;
     case "a8": return !!d.a8.instalovana;
+    case "tech": return d.zdroje.length > 0 && d.zdrojeTV.length > 0 && !!d.a6.rizeneVetrani
+      && !!d.a7.instalovan && !!d.a8.instalovana;
     case "sp": return d.spotreby.length > 0;
     case "b1": return d.b1.resiSeDotace !== "ano" || cislo(d.b1.prijemMzdy)+cislo(d.b1.prijemDuchody)+cislo(d.b1.prijemDavky)+cislo(d.b1.prijemOSVC) > 0;
     case "b2": return d.fotky.length >= 4;
@@ -1004,8 +1037,36 @@ R.a3 = () => {
   box.append(el("h3", {}, "Stěny"), renderKonstrukce("steny", TYP_STENY, "stena"));
   box.append(el("h3", {}, "Podlahy"), renderKonstrukce("podlahy", TYP_PODLAHY, "podlaha_teren"));
   box.append(el("h3", {}, "Střechy a stropy"), renderKonstrukce("strechy", TYP_STRECHY, "strop_puda"));
-  box.append(el("h3", {}, "Otvorové výplně"));
-  box.append(seznam(Z.data.vyplne, "Výplň", () => ({typ:"", ram:"", zaskleni:"", sirka:"", vyska:"", kusy:{}, u:"", lze:"", rok:""}),
+  return box;
+};
+
+/* --- A3a Fasády a otvorové výplně ---
+   Nový tok podle Prochyho náčrtů: on nepíše seznam oken, ale obchází fasády a na každou
+   si nakreslí, co na ní je. Nahoře je proto rozcestník po světových stranách. */
+R.vyp = () => {
+  const box = el("div");
+  const list = Z.data.vyplne;
+
+  /* Rozcestník po fasádách — kolik otvorů a kolik m² je na které straně */
+  const prehled = el("div", {class:"karta"});
+  prehled.append(el("div", {class:"blok-hl"}, el("b", {}, "Přidat otvor na fasádu")));
+  const gr = el("div", {class:"mrizka4"});
+  ORIENTACE.forEach(o => {
+    let ks = 0, m2 = 0;
+    list.forEach(v => { const p = plochaVyplne(v); if (p.dleOrientace[o]) { ks += Math.max(0, cislo((v.kusy||{})[o])); m2 += p.dleOrientace[o]; } });
+    gr.append(el("button", {type:"button", class:"g", style:"flex-direction:column;line-height:1.25",
+      onclick:() => {
+        const nova = {typ:"okno", ram:"", zaskleni:"", sirka:"", vyska:"", kusy:{}, zona:ZONA_VYPLNE[0], u:"", lze:"", rok:""};
+        nova.kusy[o] = 1;
+        list.push(nova); zmena(); prekreslit();
+      }},
+      el("b", {}, "+ " + o),
+      el("span", {class:"mala"}, ks ? ks + " ks · " + fmt(m2,1) + " m²" : "zatím nic")));
+  });
+  prehled.append(gr);
+  box.append(prehled);
+
+  box.append(seznam(list, "Výplň", () => ({typ:"", ram:"", zaskleni:"", sirka:"", vyska:"", kusy:{}, zona:ZONA_VYPLNE[0], u:"", lze:"", rok:""}),
     (v) => {
       const b = el("div");
       v.kusy = v.kusy || {};
@@ -1019,6 +1080,10 @@ R.a3 = () => {
         {k:"u", l:"U (je-li známo z dokumentace)", t:"number", jed:"W/m²·K"},
         {k:"lze", l:"Lze vyměnit", t:"anone"}
       ], "mrizka3"));
+      /* Do obálky budovy patří jen otvory do venkovního prostoru. Otvor do nevytápěné dílny
+         nebo garáže se musí odečíst — jinak vyjde plocha obálky větší, než ve skutečnosti je. */
+      b.append(pole(v, {k:"zona", l:"Kam otvor vede", t:"select", opt:ZONA_VYPLNE, prekresli:true,
+        hint:"Jen otvory do venkovního prostoru se počítají do obálky budovy."}));
       /* Kusy po světových stranách — aplikace RP chce orientaci u každého okna.
          Jeden rozměr se tak zadá jednou a rozepíše se počty na fasády.        */
       const vys = el("div", {class:"vysledek"});
@@ -1027,7 +1092,8 @@ R.a3 = () => {
         const rozpis = Object.keys(p.dleOrientace).map(o => o + " " + fmt(p.dleOrientace[o],1)).join(" · ");
         vys.innerHTML = "";
         vys.append(el("div", {}, "Jeden kus: " + fmt(p.jedna,2) + " m² · celkem " + p.celkemKs + " ks → ",
-          el("b", {}, fmt(p.celkem,2) + " m²")));
+          el("b", {}, fmt(p.celkem,2) + " m²"),
+          jeVenkovni(v) ? "" : el("span", {class:"mala"}, " — mimo obálku (" + zonaVyplne(v) + ")")));
         if (rozpis) vys.append(el("div", {class:"mala"}, "Po orientacích [m²]: " + rozpis));
         if (p.jedna > 15) vys.append(el("div", {class:"mala"}, "⚠️ Jeden kus přes 15 m² — zkontroluj, jestli nejsou rozměry v centimetrech."));
       };
@@ -1048,15 +1114,19 @@ R.a3 = () => {
       prepocti();
       b.append(vys);
       return b;
-    }, "Rozměr zadej jednou a rozepiš počty po světových stranách. Orientace je v aplikaci RP povinná — bez ní nespočítá solární zisky."));
-  /* Kontrola: okna se musí vejít do stěn */
+    }, "Rozměr zadej jednou a rozepiš počty po světových stranách. Orientace je v aplikaci RP povinná — bez ní nespočítá solární zisky.", true));
+  /* Kontrola: okna se musí vejít do stěn. Do obálky jdou jen otvory do venkovního prostoru. */
   (() => {
     const stav = spoctiObjem(Z.data.a2);
-    const oknaCelkem = Z.data.vyplne.reduce((s,v) => s + plochaVyplne(v).celkem, 0);
-    if (stav.plochaSten > 0 && oknaCelkem > 0) {
-      const podil = oknaCelkem / stav.plochaSten * 100;
-      const t = "Výplně celkem " + fmt(oknaCelkem,1) + " m² proti ploše stěn " + fmt(stav.plochaSten,1)
-        + " m² — to je " + fmt(podil,0) + " % fasády.";
+    const venkovni = list.filter(jeVenkovni).reduce((s,v) => s + plochaVyplne(v).celkem, 0);
+    const mimo = list.filter(v => !jeVenkovni(v)).reduce((s,v) => s + plochaVyplne(v).celkem, 0);
+    if (mimo > 0) box.append(el("div", {class:"karta"},
+      "Mimo obálku budovy (do nevytápěných prostor a k sousední budově): ",
+      el("b", {}, fmt(mimo,1) + " m²"), el("div", {class:"mala"}, "Kancelář tuhle plochu od obálky odečte.")));
+    if (stav.plochaSten > 0 && venkovni > 0) {
+      const podil = venkovni / stav.plochaSten * 100;
+      const t = "Výplně do venkovního prostoru celkem " + fmt(venkovni,1) + " m² proti ploše stěn "
+        + fmt(stav.plochaSten,1) + " m² — to je " + fmt(podil,0) + " % fasády.";
       box.append(el("div", {class: podil > 60 ? "chyba" : "vysledek"},
         podil > 60 ? "⚠️ " + t + " To je moc, zkontroluj rozměry a počty kusů." : t));
     }
@@ -1109,14 +1179,35 @@ R.a6 = () => {
 R.a7 = () => {
   const a = Z.data.a7, box = el("div");
   box.append(pole(a, {k:"instalovan", l:"Je instalován solární termický systém?", t:"anone"}));
-  if (a.instalovan === "ano") box.append(polePole(a, [
-    {k:"typKolektoru", l:"Typ kolektoru", t:"select", opt:["plochý","trubicový (vakuový)"]},
-    {k:"pocet", l:"Počet kolektorů", t:"number"},
-    {k:"plocha", l:"Celková plocha kolektorů", t:"number", jed:"m²"},
-    {k:"sklon", l:"Sklon", t:"number", jed:"°"},
-    {k:"azimut", l:"Azimut (0° = jih)", t:"number", jed:"°"},
-    {k:"rok", l:"Rok instalace", t:"number"}
-  ]));
+  if (a.instalovan === "ano") {
+    box.append(polePole(a, [
+      {k:"typKolektoru", l:"Typ kolektoru", t:"select", opt:["plochý","trubicový (vakuový)"]},
+      {k:"typSystemu", l:"Typ solárního systému", t:"select", opt:["ohřev TV","ohřev TV + přitápění","ohřev bazénu","kombinovaný"]},
+      {k:"pocet", l:"Počet kolektorů", t:"number"},
+      {k:"plocha", l:"Celková plocha kolektorů", t:"number", jed:"m²"},
+      {k:"sklon", l:"Sklon", t:"number", jed:"°"},
+      {k:"azimut", l:"Azimut (0° = jih)", t:"number", jed:"°"},
+      {k:"rok", l:"Rok instalace", t:"number"}
+    ]));
+    /* Aplikace RP chce u kolektoru parametry z technického listu, ne z oka.
+       V terénu se vyfotí štítek a typ kolektoru, hodnoty doplní kancelář z listu výrobce. */
+    box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Parametry kolektoru z technického listu"),
+      el("p", {class:"pod"}, "Povinné v aplikaci RP. Na místě stačí vyfotit štítek a značku/typ — zbytek dohledá kancelář."),
+      polePole(a, [
+        {k:"vyrobce", l:"Výrobce a typ kolektoru", t:"text", ph:"např. Regulus KPG1-ALP"},
+        {k:"vztaznaPlocha", l:"Vztažná plocha (kterou udává list)", t:"select", opt:["apertura (Aa)","absorbér","hrubá plocha"]},
+        {k:"Aa", l:"Aa — plocha apertury jednoho kolektoru", t:"number", jed:"m²"},
+        {k:"eta0", l:"η₀ — optická účinnost", t:"number", hint:"Bezrozměrné, typicky 0,75–0,85."},
+        {k:"a1", l:"a1 — lineární součinitel ztrát", t:"number", jed:"W/m²·K"},
+        {k:"a2", l:"a2 — kvadratický součinitel ztrát", t:"number", jed:"W/m²·K²"}
+      ], "mrizka3")));
+    box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Solární zásobník"),
+      polePole(a, [
+        {k:"typZasobniku", l:"Typ zásobníku", t:"select", opt:["monovalentní (jeden výměník)","bivalentní (dva výměníky)","kombinovaný (nádrž v nádrži)","akumulační nádrž s ohřevem TV"]},
+        {k:"objemZasobniku", l:"Objem zásobníku", t:"number", jed:"l"},
+        {k:"zasobnikRok", l:"Rok instalace zásobníku", t:"number"}
+      ], "mrizka3")));
+  }
   box.append(pole(a, {k:"navrzen", l:"Je solární termický systém navržen (do budoucna)?", t:"anone"}));
   return box;
 };
@@ -1133,7 +1224,67 @@ R.a8 = () => {
     {k:"nabijecka", l:"Nabíjecí stanice pro elektromobil", t:"anone"},
     {k:"rok", l:"Rok instalace", t:"number"}
   ]));
-  box.append(pole(a, {k:"navrzena", l:"Je fotovoltaika navržena (do budoucna)?", t:"anone"}));
+  box.append(pole(a, {k:"navrzena", l:"Je fotovoltaika navržena (do budoucna)?", t:"anone", prekresli:true}));
+  /* Prochy: „tvoje APP se ptá jen jestli chce, ano chce, ale musí se komplet vyplnit,
+     musím znát data od instalační firmy." U Jonáše: 16 panelů, 8 jih + 8 západ, 500 Wp, 8 kWp. */
+  if (a.navrzena === "ano") {
+    box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Navržená fotovoltaika"),
+      el("p", {class:"pod"}, "Aplikace RP chce u navržené FVE kompletní parametry — bez nich nejde požádat o zvýhodněný úvěr. Když už má klient nabídku od instalační firmy, opiš ji sem nebo ji vyfoť."),
+      polePole(a, [
+        {k:"nFirma", l:"Instalační firma / zdroj nabídky", t:"text", ph:"např. nabídka od SEFT"},
+        {k:"nVykonPanelu", l:"Výkon jednoho panelu", t:"number", jed:"Wp", poPsani:() => prepoctiN()},
+        {k:"nPlochaPanelu", l:"Plocha jednoho panelu", t:"number", jed:"m²"},
+        {k:"nSklon", l:"Sklon střechy", t:"number", jed:"°"},
+        {k:"nPlochaStrechy", l:"Využitelná plocha střechy", t:"number", jed:"m²"},
+        {k:"nBaterie", l:"Kapacita baterie", t:"number", jed:"kWh"},
+        {k:"nNabijecka", l:"Nabíjecí stanice pro elektromobil", t:"anone"},
+        {k:"nRizeni", l:"Chytré řízení spotřeby", t:"anone"},
+        {k:"nKomunitni", l:"Zapojení do komunitní energetiky", t:"anone"}
+      ], "mrizka3")));
+    /* Panely bývají rozdělené na víc střešních rovin — u Jonáše 8 jih + 8 západ. */
+    a.nPanely = a.nPanely || {};
+    const vysN = el("div", {class:"vysledek"});
+    const prepoctiN = () => {
+      let ks = 0;
+      ORIENTACE.forEach(o => ks += Math.max(0, cislo(a.nPanely[o])));
+      const kwp = ks * cislo(a.nVykonPanelu) / 1000;
+      vysN.innerHTML = "";
+      vysN.append(el("div", {}, "Panelů celkem: " + ks + " → ", el("b", {}, fmt(kwp,2) + " kWp")));
+      if (ks > 0 && cislo(a.nVykonPanelu) <= 0) vysN.append(el("div", {class:"mala"}, "Doplň výkon jednoho panelu, ať se dopočítá kWp."));
+    };
+    const fsN = el("fieldset", {class:"blok"});
+    fsN.append(el("legend", {}, "Počet panelů po střešních rovinách"));
+    const grN = el("div", {class:"mrizka4"});
+    ORIENTACE.forEach(o => {
+      const p = el("div", {class:"pole"});
+      p.append(el("label", {}, o));
+      const inp = el("input", {type:"number", inputmode:"numeric", min:"0", step:"1",
+        oninput:ev => { a.nPanely[o] = ev.target.value; zmena(); prepoctiN(); }});
+      inp.value = nebo(a.nPanely[o], "");
+      p.append(inp); grN.append(p);
+    });
+    fsN.append(grN);
+    box.append(fsN);
+    prepoctiN();
+    box.append(vysN);
+  }
+  return box;
+};
+
+/* --- Technika: v režimu Návštěva jsou A4–A8 na jedné stránce ---
+   Prochy má celý dům na jedné A4 o třinácti řádcích. Přepínání pěti záložek u zákazníka
+   je zbytečné klikání — obchází kotelnu jednou. */
+R.tech = () => {
+  const box = el("div");
+  [["A4 · Zdroje tepla na vytápění", "a4", "Vyfoť štítek zdroje — výkon a rok dohledá kancelář."],
+   ["A5 · Zdroje tepla pro ohřev TV", "a5", ""],
+   ["A6 · Větrání, chlazení a osvětlení", "a6", ""],
+   ["A7 · Solární termický ohřev TV", "a7", ""],
+   ["A8 · Fotovoltaika", "a8", ""]].forEach(([nadpis, id, pod]) => {
+    box.append(el("h3", {style:"margin-top:22px"}, nadpis));
+    if (pod) box.append(el("p", {class:"pod"}, pod));
+    box.append(R[id]());
+  });
   return box;
 };
 
@@ -1462,12 +1613,16 @@ R.b3 = () => {
   box.append(el("div", {class:"radek netisknout", style:"margin-bottom:10px"},
     el("button", {type:"button", class:"p", onclick:tiskniProtokol}, "🖨 Vytisknout protokol / uložit jako PDF"),
     el("span", {class:"hint"}, "Vytiskne hotový dokument, ne tenhle formulář. Vyplň nejdřív opatření, prohlášení a podpisy.")));
-  box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Žadatel"),
-    polePole(b, [
-      {k:"pohlavi", l:"Pohlaví vlastníka", t:"select", opt:POHLAVI},
-      {k:"vek", l:"Věková skupina", t:"select", opt:VEK_SKUPINA}
-    ], "mrizka"),
-    el("div", {class:"hint"}, "Povinné indikátory výzvy — sbírají se o vlastníkovi nemovitosti.")));
+  /* Prochy: „údaje co nepotřebuju — věk, pohlaví". Jsou to indikátory výzvy, ne vstup pasu,
+     takže se ptáme jen tam, kde se o dotaci opravdu žádá. */
+  if (Z.data.b1.resiSeDotace === "ano") {
+    box.append(el("fieldset", {class:"blok"}, el("legend", {}, "Žadatel — indikátory výzvy"),
+      polePole(b, [
+        {k:"pohlavi", l:"Pohlaví vlastníka", t:"select", opt:POHLAVI},
+        {k:"vek", l:"Věková skupina", t:"select", opt:VEK_SKUPINA}
+      ], "mrizka"),
+      el("div", {class:"hint"}, "Sbírá se jen u žádosti o dotaci. Pro samotný renovační pas to potřeba není.")));
+  }
 
   /* Navrhovaná opatření + etapizace.
      Aplikace RP má u každého opatření dvě povinná pole: do které etapy patří
@@ -1829,34 +1984,61 @@ function vykreslitTaby(){
   const t = $("#taby");
   t.innerHTML = "";
   if (!Z) return;
-  SEKCE.forEach(s => {
+  sekceRezimu().forEach(s => {
     const b = el("button", {type:"button", class:(s.id === aktSekce ? "akt " : "") + (hotovo(s.id) ? "hot" : ""),
       onclick:() => { aktSekce = s.id; prekreslit(); window.scrollTo(0,0); }}, s.tab);
     t.append(b);
   });
 }
 
+/* Přepínač režimu. Cíl je držet u zákazníka jen to, co se jinde získat nedá —
+   zbytek (U ze skladeb, objemy, plochy, export) se dodělá v kanceláři. */
+function vykreslitRezim(){
+  const p = $("#rezimPruh");
+  p.innerHTML = "";
+  if (!Z) { p.style.display = "none"; return; }
+  p.style.display = "flex";
+  const akt = Z.rezim === "kancelar" ? "kancelar" : "navsteva";
+  p.append(el("span", {class:"lbl"}, "Režim:"));
+  [["navsteva","U zákazníka"],["kancelar","Kancelář"]].forEach(([kod, popis]) => {
+    p.append(el("button", {type:"button", class: akt === kod ? "akt" : "", onclick:() => {
+      Z.rezim = kod;
+      /* Když aktuální sekce v novém režimu neexistuje, skoč na první dostupnou. */
+      if (!sekceRezimu().some(s => s.id === aktSekce)) aktSekce = sekceRezimu()[0].id;
+      zmena(); prekreslit(); window.scrollTo(0,0);
+    }}, popis));
+  });
+  p.append(el("span", {class:"mala", style:"margin:0"}, akt === "navsteva"
+    ? "Zobrazuje se jen to, co se sbírá na místě. Nic se neztrácí — data zůstávají."
+    : "Zobrazuje se vše včetně výpočtů a exportu."));
+}
+
 function prekreslit(){
   const o = $("#obsah");
   o.innerHTML = "";
-  if (!Z) { return seznamZakazek(); }
-  const s = SEKCE.find(x => x.id === aktSekce) || SEKCE[0];
+  if (!Z) { vykreslitRezim(); return seznamZakazek(); }
+  const vidi = sekceRezimu();
+  if (!vidi.some(x => x.id === aktSekce)) aktSekce = vidi[0].id;
+  const s = vidi.find(x => x.id === aktSekce) || vidi[0];
   const a = Z.data.a1;
   $("#hlavicka").textContent = [a.obec, a.zadPrijmeni].filter(Boolean).join(" · ") || "Nová zakázka";
   o.append(el("h2", {class:"sek"}, s.nazev));
   if (s.pod) o.append(el("p", {class:"pod"}, s.pod));
   o.append((R[s.id] || (() => el("div", {}, "—")))());
-  const i = SEKCE.indexOf(s);
+  const i = vidi.indexOf(s);
   o.append(el("div", {class:"radek netisknout", style:"margin-top:20px;justify-content:space-between"},
-    i > 0 ? el("button", {class:"g", onclick:() => { aktSekce = SEKCE[i-1].id; prekreslit(); window.scrollTo(0,0); }}, "← " + SEKCE[i-1].tab) : el("span"),
-    i < SEKCE.length-1 ? el("button", {class:"p", onclick:() => { aktSekce = SEKCE[i+1].id; prekreslit(); window.scrollTo(0,0); }}, SEKCE[i+1].tab + " →") : el("span")));
+    i > 0 ? el("button", {class:"g", onclick:() => { aktSekce = vidi[i-1].id; prekreslit(); window.scrollTo(0,0); }}, "← " + vidi[i-1].tab) : el("span"),
+    i < vidi.length-1 ? el("button", {class:"p", onclick:() => { aktSekce = vidi[i+1].id; prekreslit(); window.scrollTo(0,0); }}, vidi[i+1].tab + " →") : el("span")));
   vykreslitTaby();
+  vykreslitRezim();
 }
 
 async function seznamZakazek(){
   const o = $("#obsah");
   o.innerHTML = "";
   $("#taby").innerHTML = "";
+  $("#rezimPruh").innerHTML = "";
+  $("#rezimPruh").style.display = "none";
   $("#hlavicka").textContent = "Renovační pas — terénní sběr";
   const vse = (await DB.vse()).sort((a,b) => (b.zmeneno||"").localeCompare(a.zmeneno||""));
   o.append(el("h2", {class:"sek"}, "Zakázky v zařízení"));
@@ -1883,10 +2065,23 @@ async function seznamZakazek(){
   if (!vse.length) o.append(el("div", {class:"karta"}, "Zatím tu nic není. Založ první zakázku tlačítkem výše."));
 }
 
+/* Háček pro automatické testy. Konstanty a proměnná Z jsou uvnitř skriptu (let/const),
+   zvenčí se k nim jinak nedá — bez tohohle nejde appku otestovat jinak než klikáním.
+   V prohlížeči se nepoužívá a nic neovlivňuje. */
+window.__test = {
+  SEKCE, ZONA_VYPLNE, TYP_ZDROJE, ORIENTACE,
+  sekceRezimu, plochaVyplne, jeVenkovni, zonaVyplne, spoctiU, spoctiDecil,
+  spoctiObjem, spoctiFasady, spoctiVysku, navrhovaLambda,
+  prazdnaZakazka, prekreslit, hotovo,
+  nastavZ: z => { Z = z; }, dejZ: () => Z, nastavSekci: s => { aktSekce = s; }
+};
+
 /* ---------- 10. Start ---------- */
 $("#btnSeznam").addEventListener("click", () => { Z = null; seznamZakazek(); });
 $("#btnOdeslat").addEventListener("click", () => {
   if (!Z) return alert("Nejdřív otevři zakázku.");
+  /* Export je práce pro kancelář — přepni tam, ať je vidět kontrola úplnosti celé zakázky. */
+  Z.rezim = "kancelar";
   aktSekce = "ex"; prekreslit(); window.scrollTo(0,0);
 });
 window.addEventListener("online", () => { if (CFG.endpoint) odeslatFrontu(false); });
