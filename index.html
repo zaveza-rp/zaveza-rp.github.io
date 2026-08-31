@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#12603a">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="ikona-192.png">
-<title>Renovační pas — terénní sběr v1.5.0 (ZAVEZA)</title>
+<title>Renovační pas — terénní sběr v1.5.1 (ZAVEZA)</title>
 <style>
 :root{
   --zel:#12603a; --zel2:#1d8b55; --sed:#f4f5f4; --ram:#d6dad7; --txt:#16211b;
@@ -49,6 +49,8 @@ textarea{min-height:84px}
 .mrizka{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .mrizka3{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
 .mrizka4{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:8px}
+.mrizka4>button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1.25}
+.mrizka4>button .mala{margin:0}
 .rezimPruh{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;border-bottom:1px solid var(--ram);flex-wrap:wrap}
 .rezimPruh .lbl{font-size:13px;color:#4a5b52;font-weight:600}
 .rezimPruh button{background:#fff;border:1px solid var(--ram);color:#4a544d;font-weight:600;padding:7px 14px;min-height:38px;font-size:14px}
@@ -126,7 +128,7 @@ canvas.podpis{width:100%;height:190px;border:1px dashed #9aa79f;border-radius:va
     <li style="margin-bottom:6px">Na <b>Androidu</b> soubor otevřete v Chrome (ne v prohlížeči souborů).</li>
     <li style="margin-bottom:6px">Na <b>notebooku</b> klikněte na soubor pravým tlačítkem → Otevřít v programu → Chrome nebo Edge.</li>
   </ul>
-  <p style="color:#5b655e;font-size:14px;margin:0">Terénní sběr dat pro renovační pasy · ZAVEZA · v1.5.0</p>
+  <p style="color:#5b655e;font-size:14px;margin:0">Terénní sběr dat pro renovační pasy · ZAVEZA · v1.5.1</p>
 </div></main>
 <script>
 /* Běží jako první. Když se sem prohlížeč dostane, skripty fungují a zprávu výše schováme.
@@ -134,7 +136,7 @@ canvas.podpis{width:100%;height:190px;border:1px dashed #9aa79f;border-radius:va
 try { var b = document.getElementById("bezSkriptu"); if (b) b.style.display = "none"; } catch (e) {}
 </script>
 <div class="lista netisknout">
-  <span class="info" id="infoLista">ZAVEZA · v1.5.0</span>
+  <span class="info" id="infoLista">ZAVEZA · v1.5.1</span>
   <div class="radek">
     <button class="sm p" id="btnOdeslat">Dokončit a odeslat →</button>
   </div>
@@ -150,7 +152,7 @@ try { var b = document.getElementById("bezSkriptu"); if (b) b.style.display = "n
 
 /* ---------- 0. Konfigurace ---------- */
 const CFG = {
-  verze: "1.5.0",
+  verze: "1.5.1",
   /* Endpoint na webu Zavezy. Když je prázdný, appka odesílá pouze
      souborem (Sdílet / Uložit do souborů). Doplní se při nasazení. */
   endpoint: "",
@@ -1054,7 +1056,7 @@ R.vyp = () => {
   ORIENTACE.forEach(o => {
     let ks = 0, m2 = 0;
     list.forEach(v => { const p = plochaVyplne(v); if (p.dleOrientace[o]) { ks += Math.max(0, cislo((v.kusy||{})[o])); m2 += p.dleOrientace[o]; } });
-    gr.append(el("button", {type:"button", class:"g", style:"flex-direction:column;line-height:1.25",
+    gr.append(el("button", {type:"button", class:"g",
       onclick:() => {
         const nova = {typ:"okno", ram:"", zaskleni:"", sirka:"", vyska:"", kusy:{}, zona:ZONA_VYPLNE[0], u:"", lze:"", rok:""};
         nova.kusy[o] = 1;
